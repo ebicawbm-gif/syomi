@@ -32,7 +32,7 @@
     .bad { background:#ffe3e3; border-color:#ffb3b3; }
     .good { background:#e6fcf5; border-color:#b2f2e5; }
     .right { display:flex; gap:8px; flex-wrap:wrap; }
-    .toast { position: fixed; left:50%; transform:translateX(-50%); bottom: 18px; background:#111; color:#fff; padding:10px 12px; border-radius: 999px; font-size: 13px; opacity:0; pointer-events:none; transition:opacity .15s ease; }
+    .toast { position: fixed; left:50%; transform:translateX(-50%); bottom: 18px; background:#111; color:#fff; padding:10px 12px; border-radius: 999px; font-size: 13px; opacity:0; pointer-events:none; transition:opacity .15s ease; max-width: 92vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .toast.show { opacity: 1; }
     .topbar { display:flex; justify-content:space-between; align-items:center; gap:10px; }
     .topbar .who { font-size:12px; color:#666; word-break:break-all; }
@@ -42,6 +42,7 @@
     .kpi .box { border:1px solid #eee; border-radius:12px; padding:10px; background:#fafafa; min-width: 120px; }
     .kpi .n { font-size:18px; font-weight:800; }
     .kpi .t { font-size:12px; color:#666; }
+    .status { font-size:12px; color:#666; padding:8px 10px; border:1px dashed #ddd; border-radius:12px; background:#fafafa; }
     @media (max-width:480px){
       header h1 { font-size:16px; }
     }
@@ -59,21 +60,21 @@
   </header>
 
   <main class="stack">
-    <!-- 設定（URL / KEY） -->
     <section class="card">
       <div class="stack">
         <div class="help">
-          <b>使い方：</b>Supabaseの <b>Project URL</b> と <b>anon key</b> を下に貼って保存 → ログイン。<br/>
-          その後、複数iPadで同じアカウントで入れば Realtimeで同期します。
+          <b>使い方：</b>Supabaseの <b>Project URL</b> と <b>公開キー（sb_publishable_…）</b> を入れて保存 → ログイン。<br/>
+          クリックが無反応なときは、下の「ライブラリ状態」を見てね。
         </div>
+        <div id="libStatus" class="status">ライブラリ状態: 確認中…</div>
         <div class="row">
           <div>
             <label>SUPABASE_URL</label>
             <input id="sbUrl" placeholder="https://xxxx.supabase.co" />
           </div>
           <div>
-            <label>SUPABASE_ANON_KEY</label>
-            <input id="sbKey" placeholder="eyJhbGciOi..." />
+            <label>SUPABASE_PUBLIC_KEY（sb_publishable_... / 旧 anon でも可）</label>
+            <input id="sbKey" placeholder="sb_publishable_..." />
           </div>
           <div style="flex:0 0 140px;">
             <label>&nbsp;</label>
@@ -84,7 +85,6 @@
       </div>
     </section>
 
-    <!-- ログイン -->
     <section id="authCard" class="card">
       <div class="stack">
         <h2 style="margin:0;font-size:16px;">ログイン</h2>
@@ -104,12 +104,11 @@
         </div>
         <div class="help">
           同一店舗運用で「全タブレット同一アカウント」想定。<br/>
-          ※未作成なら Supabase Auth にユーザー作成してからログインしてね。
+          ※ユーザー未作成だとログインできません（Supabase Auth → Users で作成）。
         </div>
       </div>
     </section>
 
-    <!-- アプリ本体 -->
     <section id="appCard" class="card hidden">
       <div class="stack">
         <div class="row" style="align-items:flex-end;">
@@ -176,29 +175,24 @@
 
         <div id="list" class="list"></div>
         <div id="empty" class="muted" style="margin-top:8px;">データがありません。</div>
-
-        <div class="help">
-          <b>同期：</b>別のiPadで追加/更新/削除すると、この画面も自動更新します（Realtime）。<br/>
-          <b>編集：</b>数量や賞味期限は各カードの「編集」から変更できます。
-        </div>
       </div>
     </section>
   </main>
 
   <div id="toast" class="toast"></div>
 
-  <!-- Supabase JS (UMD) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- ✅ Supabase JS (UMDの正しいパス) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <script>
     // ==========
-    // 設定
+    // Utilities
     // ==========
     const LS_URL_KEY = "sb_url";
     const LS_ANON_KEY = "sb_anon";
     const $ = (id) => document.getElementById(id);
 
-    let supabase = null;
+    let supabaseClient = null;
     let realtimeChannel = null;
     let itemsCache = [];
 
@@ -206,7 +200,24 @@
       const el = $("toast");
       el.textContent = msg;
       el.classList.add("show");
-      setTimeout(() => el.classList.remove("show"), 1800);
+      setTimeout(() => el.classList.remove("show"), 2200);
+    }
+
+    // どこで落ちても画面に出す（「無反応」対策）
+    window.addEventListener("error", (e) => {
+      toast(`JSエラー: ${e.message}`);
+      console.error(e.error || e);
+    });
+    window.addEventListener("unhandledrejection", (e) => {
+      toast(`Promiseエラー: ${e.reason?.message || e.reason}`);
+      console.error(e.reason);
+    });
+
+    function setLibStatus() {
+      const ok = !!(window.supabase && typeof window.supabase.createClient === "function");
+      $("libStatus").textContent = ok
+        ? "ライブラリ状態: OK（supabase-js 読み込み成功）"
+        : "ライブラリ状態: NG（supabase-js 読み込み失敗）→ ネットワーク/拡張機能/URLを確認";
     }
 
     function formatDateYMD(d) {
@@ -217,7 +228,6 @@
     }
 
     function daysDiffFromToday(dateStr) {
-      // dateStr: YYYY-MM-DD
       const today = new Date();
       const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const parts = dateStr.split("-").map(Number);
@@ -233,37 +243,46 @@
     }
 
     function ensureSupabase() {
+      setLibStatus();
+      if (!(window.supabase && typeof window.supabase.createClient === "function")) {
+        toast("supabase-js が読み込めてません（libStatusを確認）");
+        return null;
+      }
+
       const url = $("sbUrl").value.trim();
       const key = $("sbKey").value.trim();
       if (!url || !key) {
-        toast("Supabase URL / anon key を設定してね");
+        toast("Supabase URL / 公開キーを設定してね");
         return null;
       }
-      supabase = window.supabase.createClient(url, key);
-      return supabase;
+
+      // 既に作成済みなら再利用
+      if (!supabaseClient) {
+        supabaseClient = window.supabase.createClient(url, key);
+      }
+      return supabaseClient;
     }
 
     function loadCfgFromLS() {
-      const url = localStorage.getItem(LS_URL_KEY) || "";
-      const key = localStorage.getItem(LS_ANON_KEY) || "";
-      $("sbUrl").value = url;
-      $("sbKey").value = key;
+      $("sbUrl").value = localStorage.getItem(LS_URL_KEY) || "";
+      $("sbKey").value = localStorage.getItem(LS_ANON_KEY) || "";
     }
 
     function saveCfgToLS() {
       localStorage.setItem(LS_URL_KEY, $("sbUrl").value.trim());
       localStorage.setItem(LS_ANON_KEY, $("sbKey").value.trim());
       toast("設定を保存しました");
-      supabase = null; // 作り直し
+      supabaseClient = null; // 作り直し
     }
 
     // ==========
     // Auth
     // ==========
     async function refreshSessionUI() {
-      if (!ensureSupabase()) return;
+      const sb = ensureSupabase();
+      if (!sb) return;
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await sb.auth.getSession();
       const loggedIn = !!session;
 
       $("authCard").classList.toggle("hidden", loggedIn);
@@ -274,7 +293,7 @@
 
       if (loggedIn) {
         await startRealtime();
-        await reloadItems();
+        await reloadItems(false);
       } else {
         await stopRealtime();
         itemsCache = [];
@@ -283,7 +302,9 @@
     }
 
     async function login() {
-      if (!ensureSupabase()) return;
+      toast("ログイン処理開始…");
+      const sb = ensureSupabase();
+      if (!sb) return;
 
       const email = $("email").value.trim();
       const password = $("password").value;
@@ -295,7 +316,7 @@
 
       $("btnLogin").disabled = true;
       try {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast("ログインしました");
         await refreshSessionUI();
@@ -308,8 +329,9 @@
     }
 
     async function logout() {
-      if (!ensureSupabase()) return;
-      await supabase.auth.signOut();
+      const sb = ensureSupabase();
+      if (!sb) return;
+      await sb.auth.signOut();
       toast("ログアウトしました");
       await refreshSessionUI();
     }
@@ -318,31 +340,27 @@
     // Realtime
     // ==========
     async function startRealtime() {
-      if (!ensureSupabase()) return;
+      const sb = ensureSupabase();
+      if (!sb) return;
       if (realtimeChannel) return;
 
-      realtimeChannel = supabase
+      realtimeChannel = sb
         .channel("rt-items")
         .on("postgres_changes",
           { event: "*", schema: "public", table: "items" },
-          async (payload) => {
-            // 変更検知 → 再取得（シンプルに確実）
-            // 将来はpayloadで差分更新もできる
+          async () => {
             await reloadItems(false);
             toast("同期更新");
           }
         )
-        .subscribe((status) => {
-          if (status === "SUBSCRIBED") {
-            // console.log("Realtime subscribed");
-          }
-        });
+        .subscribe();
     }
 
     async function stopRealtime() {
-      if (!ensureSupabase()) return;
+      const sb = ensureSupabase();
+      if (!sb) return;
       if (realtimeChannel) {
-        await supabase.removeChannel(realtimeChannel);
+        await sb.removeChannel(realtimeChannel);
         realtimeChannel = null;
       }
     }
@@ -362,12 +380,13 @@
     }
 
     async function reloadItems(showToast = true) {
-      if (!ensureSupabase()) return;
+      const sb = ensureSupabase();
+      if (!sb) return;
       const sort = getSortSpec();
 
       $("btnReload").disabled = true;
       try {
-        const { data, error } = await supabase
+        const { data, error } = await sb
           .from("items")
           .select("*")
           .order(sort.col, { ascending: sort.asc });
@@ -385,7 +404,8 @@
     }
 
     async function addItem() {
-      if (!ensureSupabase()) return;
+      const sb = ensureSupabase();
+      if (!sb) return;
 
       const name = $("inName").value.trim();
       const exp = $("inExp").value;
@@ -398,18 +418,17 @@
 
       $("btnAdd").disabled = true;
       try {
-        const { error } = await supabase
+        const { error } = await sb
           .from("items")
           .insert([{ name, expiration_date: exp, quantity: qty, note: note || null }]);
 
         if (error) throw error;
 
         $("inName").value = "";
-        $("inExp").value = "";
+        $("inExp").value = formatDateYMD(new Date());
         $("inQty").value = "1";
         $("inNote").value = "";
         toast("追加しました");
-        // Realtimeが効いていれば自動反映、保険で再取得
         await reloadItems(false);
       } catch (e) {
         console.error(e);
@@ -420,9 +439,10 @@
     }
 
     async function updateItem(id, patch) {
-      if (!ensureSupabase()) return;
+      const sb = ensureSupabase();
+      if (!sb) return;
       try {
-        const { error } = await supabase.from("items").update(patch).eq("id", id);
+        const { error } = await sb.from("items").update(patch).eq("id", id);
         if (error) throw error;
         toast("更新しました");
         await reloadItems(false);
@@ -433,10 +453,11 @@
     }
 
     async function deleteItem(id) {
-      if (!ensureSupabase()) return;
+      const sb = ensureSupabase();
+      if (!sb) return;
       if (!confirm("削除しますか？")) return;
       try {
-        const { error } = await supabase.from("items").delete().eq("id", id);
+        const { error } = await sb.from("items").delete().eq("id", id);
         if (error) throw error;
         toast("削除しました");
         await reloadItems(false);
@@ -452,7 +473,6 @@
     function filteredItems() {
       const q = $("inSearch").value.trim().toLowerCase();
       if (!q) return itemsCache;
-
       return itemsCache.filter(it => {
         const a = (it.name || "").toLowerCase();
         const b = (it.note || "").toLowerCase();
@@ -463,7 +483,6 @@
 
     function renderKpi(list) {
       $("kpiTotal").textContent = String(list.length);
-
       let soon = 0;
       let expired = 0;
       for (const it of list) {
@@ -481,7 +500,6 @@
 
       const list = filteredItems();
       renderKpi(list);
-
       $("empty").style.display = list.length ? "none" : "block";
 
       for (const it of list) {
@@ -536,7 +554,6 @@
         btnEdit.type = "button";
         btnEdit.className = "secondary";
         btnEdit.textContent = "編集";
-
         btnEdit.onclick = () => {
           const newName = prompt("商品名", it.name);
           if (newName === null) return;
@@ -580,7 +597,7 @@
     }
 
     // ==========
-    // Init / Events
+    // Events / Init
     // ==========
     $("btnSaveCfg").addEventListener("click", () => {
       saveCfgToLS();
@@ -589,14 +606,11 @@
 
     $("btnLogin").addEventListener("click", login);
     $("btnLogout").addEventListener("click", logout);
-
     $("btnAdd").addEventListener("click", addItem);
-
     $("btnReload").addEventListener("click", () => reloadItems(true));
     $("selSort").addEventListener("change", () => reloadItems(false));
     $("inSearch").addEventListener("input", render);
 
-    // Enterキーでログイン/追加
     $("password").addEventListener("keydown", (e) => {
       if (e.key === "Enter") login();
     });
@@ -604,21 +618,28 @@
       if (e.key === "Enter") addItem();
     });
 
-    // 初期値：賞味期限を今日に（入力の手間を減らす）
     $("inExp").value = formatDateYMD(new Date());
 
-    // 設定読み込み→セッション反映
+    // 起動
     loadCfgFromLS();
+    setLibStatus();
+
     (async () => {
-      // URL/KEY入ってる場合だけクライアント生成してセッションUI更新
+      // URL/KEYが入ってる場合だけセッション確認
       if (($("sbUrl").value || "").trim() && ($("sbKey").value || "").trim()) {
         ensureSupabase();
       }
-      await refreshSessionUI();
+      try {
+        await refreshSessionUI();
+      } catch (e) {
+        console.error(e);
+        toast(`初期化失敗: ${e.message || e}`);
+      }
 
-      // SupabaseのAuth状態変化に追従
-      if (supabase) {
-        supabase.auth.onAuthStateChange(async () => {
+      // Auth状態変化に追従（クライアントが作れてる時だけ）
+      const sb = ensureSupabase();
+      if (sb) {
+        sb.auth.onAuthStateChange(async () => {
           await refreshSessionUI();
         });
       }
