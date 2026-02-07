@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>賞味期限管理</title>
+  <style>
+    :root { --pad: 14px; --r: 12px; }
+    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif; margin:0; background:#f6f7f9; }
+    header { position: sticky; top:0; background:white; border-bottom:1px solid #e7e7e7; padding:12px var(--pad); z-index:10; }
+    header h1 { margin:0; font-size:18px; }
+    main { padding: var(--pad); max-width: 900px; margin: 0 auto; }
+    .card { background:white; border:1px solid #e7e7e7; border-radius: var(--r); padding: var(--pad); box-shadow: 0 1px 0 rgba(0,0,0,0.02); }
+    .row { display:flex; gap:10px; flex-wrap:wrap; }
+    .row > * { flex: 1 1 160px; }
+    label { display:block; font-size:12px; color:#555; margin:0 0 4px; }
+    input, button, select, textarea { width:100%; box-sizing:border-box; padding:10px; border:1px solid #d9d9d9; border-radius:10px; font-size:15px; background:white; }
+    button { cursor:pointer; border:1px solid #cfcfcf; background:#111; color:white; }
+    button.secondary { background:#fff; color:#111; }
+    button.danger { background:#b00020; border-color:#b00020; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .stack { display:flex; flex-direction:column; gap:10px; }
+    .muted { color:#666; font-size:12px; }
+    .hidden { display:none !important; }
+    .list { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+    .item { display:flex; gap:10px; align-items:flex-start; justify-content:space-between; border:1px solid #eee; border-radius:12px; padding:12px; }
+    .item .left { min-width: 0; flex: 1; }
+    .item .name { font-weight: 700; font-size:16px; margin:0 0 6px; word-break:break-word; }
+    .item .meta { display:flex; gap:10px; flex-wrap:wrap; font-size:13px; color:#444; }
+    .pill { padding:4px 8px; border-radius:999px; background:#f1f3f5; border:1px solid #e9ecef; }
+    .warn { background:#fff4e6; border-color:#ffe0b2; }
+    .bad { background:#ffe3e3; border-color:#ffb3b3; }
+    .good { background:#e6fcf5; border-color:#b2f2e5; }
+    .right { display:flex; gap:8px; flex-wrap:wrap; }
+    .toast { position: fixed; left:50%; transform:translateX(-50%); bottom: 18px; background:#111; color:#fff; padding:10px 12px; border-radius: 999px; font-size: 13px; opacity:0; pointer-events:none; transition:opacity .15s ease; }
+    .toast.show { opacity: 1; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .topbar .who { font-size:12px; color:#666; word-break:break-all; }
+    .hr { height:1px; background:#eee; margin:12px 0; }
+    .help { font-size:12px; color:#666; line-height:1.6; }
+    .kpi { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .kpi .box { border:1px solid #eee; border-radius:12px; padding:10px; background:#fafafa; min-width: 120px; }
+    .kpi .n { font-size:18px; font-weight:800; }
+    .kpi .t { font-size:12px; color:#666; }
+    @media (max-width:480px){
+      header h1 { font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <h1>賞味期限管理</h1>
+      <div>
+        <button id="btnLogout" class="secondary hidden" type="button">ログアウト</button>
+      </div>
+    </div>
+    <div id="who" class="who muted"></div>
+  </header>
+
+  <main class="stack">
+    <!-- 設定（URL / KEY） -->
+    <section class="card">
+      <div class="stack">
+        <div class="help">
+          <b>使い方：</b>Supabaseの <b>Project URL</b> と <b>anon key</b> を下に貼って保存 → ログイン。<br/>
+          その後、複数iPadで同じアカウントで入れば Realtimeで同期します。
+        </div>
+        <div class="row">
+          <div>
+            <label>SUPABASE_URL</label>
+            <input id="sbUrl" placeholder="https://xxxx.supabase.co" />
+          </div>
+          <div>
+            <label>SUPABASE_ANON_KEY</label>
+            <input id="sbKey" placeholder="eyJhbGciOi..." />
+          </div>
+          <div style="flex:0 0 140px;">
+            <label>&nbsp;</label>
+            <button id="btnSaveCfg" type="button" class="secondary">保存</button>
+          </div>
+        </div>
+        <div class="muted">※端末ローカルに保存します（localStorage）。</div>
+      </div>
+    </section>
+
+    <!-- ログイン -->
+    <section id="authCard" class="card">
+      <div class="stack">
+        <h2 style="margin:0;font-size:16px;">ログイン</h2>
+        <div class="row">
+          <div>
+            <label>メールアドレス</label>
+            <input id="email" type="email" autocomplete="username" placeholder="staff@example.com" />
+          </div>
+          <div>
+            <label>パスワード</label>
+            <input id="password" type="password" autocomplete="current-password" placeholder="********" />
+          </div>
+          <div style="flex:0 0 160px;">
+            <label>&nbsp;</label>
+            <button id="btnLogin" type="button">ログイン</button>
+          </div>
+        </div>
+        <div class="help">
+          同一店舗運用で「全タブレット同一アカウント」想定。<br/>
+          ※未作成なら Supabase Auth にユーザー作成してからログインしてね。
+        </div>
+      </div>
+    </section>
+
+    <!-- アプリ本体 -->
+    <section id="appCard" class="card hidden">
+      <div class="stack">
+        <div class="row" style="align-items:flex-end;">
+          <div style="flex: 2 1 220px;">
+            <label>商品名</label>
+            <input id="inName" placeholder="例）牛乳 / 食パン / ヨーグルト" />
+          </div>
+          <div>
+            <label>賞味期限</label>
+            <input id="inExp" type="date" />
+          </div>
+          <div>
+            <label>数量</label>
+            <input id="inQty" type="number" inputmode="numeric" min="1" step="1" value="1" />
+          </div>
+          <div style="flex: 2 1 220px;">
+            <label>メモ（任意）</label>
+            <input id="inNote" placeholder="例）冷蔵 / 奥の棚 / 仕入先など" />
+          </div>
+          <div style="flex:0 0 140px;">
+            <label>&nbsp;</label>
+            <button id="btnAdd" type="button">追加</button>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="row" style="align-items:flex-end;">
+          <div>
+            <label>検索（商品名/メモ/バーコード）</label>
+            <input id="inSearch" placeholder="例）牛乳 / 冷蔵 / 490..." />
+          </div>
+          <div style="flex:0 0 180px;">
+            <label>並び順</label>
+            <select id="selSort">
+              <option value="exp_asc">賞味期限（近い→遠い）</option>
+              <option value="exp_desc">賞味期限（遠い→近い）</option>
+              <option value="created_desc">追加（新しい→古い）</option>
+              <option value="created_asc">追加（古い→新しい）</option>
+              <option value="name_asc">商品名（A→Z）</option>
+              <option value="name_desc">商品名（Z→A）</option>
+            </select>
+          </div>
+          <div style="flex:0 0 140px;">
+            <label>&nbsp;</label>
+            <button id="btnReload" type="button" class="secondary">再読込</button>
+          </div>
+        </div>
+
+        <div class="kpi">
+          <div class="box">
+            <div class="n" id="kpiTotal">0</div>
+            <div class="t">合計</div>
+          </div>
+          <div class="box">
+            <div class="n" id="kpiSoon">0</div>
+            <div class="t">3日以内</div>
+          </div>
+          <div class="box">
+            <div class="n" id="kpiExpired">0</div>
+            <div class="t">期限切れ</div>
+          </div>
+        </div>
+
+        <div id="list" class="list"></div>
+        <div id="empty" class="muted" style="margin-top:8px;">データがありません。</div>
+
+        <div class="help">
+          <b>同期：</b>別のiPadで追加/更新/削除すると、この画面も自動更新します（Realtime）。<br/>
+          <b>編集：</b>数量や賞味期限は各カードの「編集」から変更できます。
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Supabase JS (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // ==========
+    // 設定
+    // ==========
+    const LS_URL_KEY = "sb_url";
+    const LS_ANON_KEY = "sb_anon";
+    const $ = (id) => document.getElementById(id);
+
+    let supabase = null;
+    let realtimeChannel = null;
+    let itemsCache = [];
+
+    function toast(msg) {
+      const el = $("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 1800);
+    }
+
+    function formatDateYMD(d) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function daysDiffFromToday(dateStr) {
+      // dateStr: YYYY-MM-DD
+      const today = new Date();
+      const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const parts = dateStr.split("-").map(Number);
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      const ms = d.getTime() - t0.getTime();
+      return Math.round(ms / (1000 * 60 * 60 * 24));
+    }
+
+    function badgeClass(diff) {
+      if (diff < 0) return "bad";
+      if (diff <= 3) return "warn";
+      return "good";
+    }
+
+    function ensureSupabase() {
+      const url = $("sbUrl").value.trim();
+      const key = $("sbKey").value.trim();
+      if (!url || !key) {
+        toast("Supabase URL / anon key を設定してね");
+        return null;
+      }
+      supabase = window.supabase.createClient(url, key);
+      return supabase;
+    }
+
+    function loadCfgFromLS() {
+      const url = localStorage.getItem(LS_URL_KEY) || "";
+      const key = localStorage.getItem(LS_ANON_KEY) || "";
+      $("sbUrl").value = url;
+      $("sbKey").value = key;
+    }
+
+    function saveCfgToLS() {
+      localStorage.setItem(LS_URL_KEY, $("sbUrl").value.trim());
+      localStorage.setItem(LS_ANON_KEY, $("sbKey").value.trim());
+      toast("設定を保存しました");
+      supabase = null; // 作り直し
+    }
+
+    // ==========
+    // Auth
+    // ==========
+    async function refreshSessionUI() {
+      if (!ensureSupabase()) return;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const loggedIn = !!session;
+
+      $("authCard").classList.toggle("hidden", loggedIn);
+      $("appCard").classList.toggle("hidden", !loggedIn);
+      $("btnLogout").classList.toggle("hidden", !loggedIn);
+
+      $("who").textContent = loggedIn ? `ログイン中: ${session.user.email}` : "";
+
+      if (loggedIn) {
+        await startRealtime();
+        await reloadItems();
+      } else {
+        await stopRealtime();
+        itemsCache = [];
+        render();
+      }
+    }
+
+    async function login() {
+      if (!ensureSupabase()) return;
+
+      const email = $("email").value.trim();
+      const password = $("password").value;
+
+      if (!email || !password) {
+        toast("メールとパスワードを入力してね");
+        return;
+      }
+
+      $("btnLogin").disabled = true;
+      try {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        toast("ログインしました");
+        await refreshSessionUI();
+      } catch (e) {
+        console.error(e);
+        toast(`ログイン失敗: ${e.message || e}`);
+      } finally {
+        $("btnLogin").disabled = false;
+      }
+    }
+
+    async function logout() {
+      if (!ensureSupabase()) return;
+      await supabase.auth.signOut();
+      toast("ログアウトしました");
+      await refreshSessionUI();
+    }
+
+    // ==========
+    // Realtime
+    // ==========
+    async function startRealtime() {
+      if (!ensureSupabase()) return;
+      if (realtimeChannel) return;
+
+      realtimeChannel = supabase
+        .channel("rt-items")
+        .on("postgres_changes",
+          { event: "*", schema: "public", table: "items" },
+          async (payload) => {
+            // 変更検知 → 再取得（シンプルに確実）
+            // 将来はpayloadで差分更新もできる
+            await reloadItems(false);
+            toast("同期更新");
+          }
+        )
+        .subscribe((status) => {
+          if (status === "SUBSCRIBED") {
+            // console.log("Realtime subscribed");
+          }
+        });
+    }
+
+    async function stopRealtime() {
+      if (!ensureSupabase()) return;
+      if (realtimeChannel) {
+        await supabase.removeChannel(realtimeChannel);
+        realtimeChannel = null;
+      }
+    }
+
+    // ==========
+    // CRUD
+    // ==========
+    function getSortSpec() {
+      const v = $("selSort").value;
+      if (v === "exp_asc") return { col: "expiration_date", asc: true };
+      if (v === "exp_desc") return { col: "expiration_date", asc: false };
+      if (v === "created_asc") return { col: "created_at", asc: true };
+      if (v === "created_desc") return { col: "created_at", asc: false };
+      if (v === "name_asc") return { col: "name", asc: true };
+      if (v === "name_desc") return { col: "name", asc: false };
+      return { col: "expiration_date", asc: true };
+    }
+
+    async function reloadItems(showToast = true) {
+      if (!ensureSupabase()) return;
+      const sort = getSortSpec();
+
+      $("btnReload").disabled = true;
+      try {
+        const { data, error } = await supabase
+          .from("items")
+          .select("*")
+          .order(sort.col, { ascending: sort.asc });
+
+        if (error) throw error;
+        itemsCache = data || [];
+        render();
+        if (showToast) toast("読み込みました");
+      } catch (e) {
+        console.error(e);
+        toast(`読込失敗: ${e.message || e}`);
+      } finally {
+        $("btnReload").disabled = false;
+      }
+    }
+
+    async function addItem() {
+      if (!ensureSupabase()) return;
+
+      const name = $("inName").value.trim();
+      const exp = $("inExp").value;
+      const qty = parseInt($("inQty").value, 10) || 1;
+      const note = $("inNote").value.trim();
+
+      if (!name) return toast("商品名を入力してね");
+      if (!exp) return toast("賞味期限を選んでね");
+      if (qty < 1) return toast("数量は1以上にしてね");
+
+      $("btnAdd").disabled = true;
+      try {
+        const { error } = await supabase
+          .from("items")
+          .insert([{ name, expiration_date: exp, quantity: qty, note: note || null }]);
+
+        if (error) throw error;
+
+        $("inName").value = "";
+        $("inExp").value = "";
+        $("inQty").value = "1";
+        $("inNote").value = "";
+        toast("追加しました");
+        // Realtimeが効いていれば自動反映、保険で再取得
+        await reloadItems(false);
+      } catch (e) {
+        console.error(e);
+        toast(`追加失敗: ${e.message || e}`);
+      } finally {
+        $("btnAdd").disabled = false;
+      }
+    }
+
+    async function updateItem(id, patch) {
+      if (!ensureSupabase()) return;
+      try {
+        const { error } = await supabase.from("items").update(patch).eq("id", id);
+        if (error) throw error;
+        toast("更新しました");
+        await reloadItems(false);
+      } catch (e) {
+        console.error(e);
+        toast(`更新失敗: ${e.message || e}`);
+      }
+    }
+
+    async function deleteItem(id) {
+      if (!ensureSupabase()) return;
+      if (!confirm("削除しますか？")) return;
+      try {
+        const { error } = await supabase.from("items").delete().eq("id", id);
+        if (error) throw error;
+        toast("削除しました");
+        await reloadItems(false);
+      } catch (e) {
+        console.error(e);
+        toast(`削除失敗: ${e.message || e}`);
+      }
+    }
+
+    // ==========
+    // Render
+    // ==========
+    function filteredItems() {
+      const q = $("inSearch").value.trim().toLowerCase();
+      if (!q) return itemsCache;
+
+      return itemsCache.filter(it => {
+        const a = (it.name || "").toLowerCase();
+        const b = (it.note || "").toLowerCase();
+        const c = (it.barcode || "").toLowerCase();
+        return a.includes(q) || b.includes(q) || c.includes(q);
+      });
+    }
+
+    function renderKpi(list) {
+      $("kpiTotal").textContent = String(list.length);
+
+      let soon = 0;
+      let expired = 0;
+      for (const it of list) {
+        const d = daysDiffFromToday(it.expiration_date);
+        if (d < 0) expired++;
+        if (d >= 0 && d <= 3) soon++;
+      }
+      $("kpiSoon").textContent = String(soon);
+      $("kpiExpired").textContent = String(expired);
+    }
+
+    function render() {
+      const listEl = $("list");
+      listEl.innerHTML = "";
+
+      const list = filteredItems();
+      renderKpi(list);
+
+      $("empty").style.display = list.length ? "none" : "block";
+
+      for (const it of list) {
+        const diff = daysDiffFromToday(it.expiration_date);
+        const cls = badgeClass(diff);
+
+        const card = document.createElement("div");
+        card.className = "item";
+
+        const left = document.createElement("div");
+        left.className = "left";
+
+        const name = document.createElement("div");
+        name.className = "name";
+        name.textContent = it.name;
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const p1 = document.createElement("div");
+        p1.className = `pill ${cls}`;
+        p1.textContent = `賞味期限: ${it.expiration_date}`;
+
+        const p2 = document.createElement("div");
+        p2.className = "pill";
+        if (diff < 0) p2.textContent = `${Math.abs(diff)}日 期限切れ`;
+        else if (diff === 0) p2.textContent = "今日まで";
+        else p2.textContent = `あと${diff}日`;
+
+        const p3 = document.createElement("div");
+        p3.className = "pill";
+        p3.textContent = `数量: ${it.quantity}`;
+
+        meta.appendChild(p1);
+        meta.appendChild(p2);
+        meta.appendChild(p3);
+
+        if (it.note) {
+          const p4 = document.createElement("div");
+          p4.className = "pill";
+          p4.textContent = `メモ: ${it.note}`;
+          meta.appendChild(p4);
+        }
+
+        left.appendChild(name);
+        left.appendChild(meta);
+
+        const right = document.createElement("div");
+        right.className = "right";
+
+        const btnEdit = document.createElement("button");
+        btnEdit.type = "button";
+        btnEdit.className = "secondary";
+        btnEdit.textContent = "編集";
+
+        btnEdit.onclick = () => {
+          const newName = prompt("商品名", it.name);
+          if (newName === null) return;
+
+          const newExp = prompt("賞味期限（YYYY-MM-DD）", it.expiration_date);
+          if (newExp === null) return;
+
+          const newQty = prompt("数量", String(it.quantity));
+          if (newQty === null) return;
+
+          const newNote = prompt("メモ（空OK）", it.note || "");
+          if (newNote === null) return;
+
+          const qtyInt = parseInt(newQty, 10);
+          if (!newName.trim()) return toast("商品名が空です");
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(newExp.trim())) return toast("賞味期限形式が違います");
+          if (!Number.isFinite(qtyInt) || qtyInt < 1) return toast("数量は1以上");
+
+          updateItem(it.id, {
+            name: newName.trim(),
+            expiration_date: newExp.trim(),
+            quantity: qtyInt,
+            note: newNote.trim() ? newNote.trim() : null
+          });
+        };
+
+        const btnDel = document.createElement("button");
+        btnDel.type = "button";
+        btnDel.className = "danger";
+        btnDel.textContent = "削除";
+        btnDel.onclick = () => deleteItem(it.id);
+
+        right.appendChild(btnEdit);
+        right.appendChild(btnDel);
+
+        card.appendChild(left);
+        card.appendChild(right);
+
+        listEl.appendChild(card);
+      }
+    }
+
+    // ==========
+    // Init / Events
+    // ==========
+    $("btnSaveCfg").addEventListener("click", () => {
+      saveCfgToLS();
+      refreshSessionUI();
+    });
+
+    $("btnLogin").addEventListener("click", login);
+    $("btnLogout").addEventListener("click", logout);
+
+    $("btnAdd").addEventListener("click", addItem);
+
+    $("btnReload").addEventListener("click", () => reloadItems(true));
+    $("selSort").addEventListener("change", () => reloadItems(false));
+    $("inSearch").addEventListener("input", render);
+
+    // Enterキーでログイン/追加
+    $("password").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") login();
+    });
+    $("inNote").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addItem();
+    });
+
+    // 初期値：賞味期限を今日に（入力の手間を減らす）
+    $("inExp").value = formatDateYMD(new Date());
+
+    // 設定読み込み→セッション反映
+    loadCfgFromLS();
+    (async () => {
+      // URL/KEY入ってる場合だけクライアント生成してセッションUI更新
+      if (($("sbUrl").value || "").trim() && ($("sbKey").value || "").trim()) {
+        ensureSupabase();
+      }
+      await refreshSessionUI();
+
+      // SupabaseのAuth状態変化に追従
+      if (supabase) {
+        supabase.auth.onAuthStateChange(async () => {
+          await refreshSessionUI();
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
