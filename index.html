@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>賞味期限管理</title>
+  <title>賞味期限管理（ボトルビール）</title>
   <style>
     :root { --pad: 14px; --r: 12px; }
     body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif; margin:0; background:#f6f7f9; }
@@ -14,7 +14,7 @@
     .row { display:flex; gap:10px; flex-wrap:wrap; }
     .row > * { flex: 1 1 160px; }
     label { display:block; font-size:12px; color:#555; margin:0 0 4px; }
-    input, button, select, textarea { width:100%; box-sizing:border-box; padding:10px; border:1px solid #d9d9d9; border-radius:10px; font-size:15px; background:white; }
+    input, button, select { width:100%; box-sizing:border-box; padding:10px; border:1px solid #d9d9d9; border-radius:10px; font-size:15px; background:white; }
     button { cursor:pointer; border:1px solid #cfcfcf; background:#111; color:white; }
     button.secondary { background:#fff; color:#111; }
     button.danger { background:#b00020; border-color:#b00020; }
@@ -31,7 +31,7 @@
     .warn { background:#fff4e6; border-color:#ffe0b2; }
     .bad { background:#ffe3e3; border-color:#ffb3b3; }
     .good { background:#e6fcf5; border-color:#b2f2e5; }
-    .right { display:flex; gap:8px; flex-wrap:wrap; }
+    .right { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
     .toast { position: fixed; left:50%; transform:translateX(-50%); bottom: 18px; background:#111; color:#fff; padding:10px 12px; border-radius: 999px; font-size: 13px; opacity:0; pointer-events:none; transition:opacity .15s ease; max-width: 92vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .toast.show { opacity: 1; }
     .topbar { display:flex; justify-content:space-between; align-items:center; gap:10px; }
@@ -51,7 +51,7 @@
 <body>
   <header>
     <div class="topbar">
-      <h1>賞味期限管理</h1>
+      <h1>賞味期限管理（ボトルビール）</h1>
       <div>
         <button id="btnLogout" class="secondary hidden" type="button">ログアウト</button>
       </div>
@@ -60,11 +60,12 @@
   </header>
 
   <main class="stack">
-    <section class="card">
+    <!-- 設定（ログイン後は非表示にする：誤動作防止） -->
+    <section id="cfgCard" class="card">
       <div class="stack">
         <div class="help">
-          <b>使い方：</b>Supabaseの <b>Project URL</b> と <b>公開キー（sb_publishable_…）</b> を入れて保存 → ログイン。<br/>
-          クリックが無反応なときは、下の「ライブラリ状態」を見てね。
+          <b>初期設定：</b>Supabaseの <b>Project URL</b> と <b>公開キー（sb_publishable_…）</b> を入れて保存 → ログイン。<br/>
+          ※ログイン後はこの設定欄を非表示にします（誤操作防止）。
         </div>
         <div id="libStatus" class="status">ライブラリ状態: 確認中…</div>
         <div class="row">
@@ -85,6 +86,7 @@
       </div>
     </section>
 
+    <!-- ログイン -->
     <section id="authCard" class="card">
       <div class="stack">
         <h2 style="margin:0;font-size:16px;">ログイン</h2>
@@ -109,24 +111,32 @@
       </div>
     </section>
 
+    <!-- アプリ本体 -->
     <section id="appCard" class="card hidden">
       <div class="stack">
         <div class="row" style="align-items:flex-end;">
           <div style="flex: 2 1 220px;">
-            <label>商品名</label>
-            <input id="inName" placeholder="例）牛乳 / 食パン / ヨーグルト" />
+            <label>商品名（ボトルビール）</label>
+            <input id="inName" placeholder="例）Guinness / Pilsner / Lambic など" />
           </div>
           <div>
             <label>賞味期限</label>
             <input id="inExp" type="date" />
           </div>
           <div>
-            <label>数量</label>
+            <label>数量（0はNG）</label>
             <input id="inQty" type="number" inputmode="numeric" min="1" step="1" value="1" />
           </div>
           <div style="flex: 2 1 220px;">
-            <label>メモ（任意）</label>
-            <input id="inNote" placeholder="例）冷蔵 / 奥の棚 / 仕入先など" />
+            <label>保存場所</label>
+            <select id="inLoc">
+              <option value="">選択してね</option>
+              <option value="ビアタップチャンバー">ビアタップチャンバー</option>
+              <option value="イギリス">イギリス</option>
+              <option value="チェコ">チェコ</option>
+              <option value="ベルギー">ベルギー</option>
+              <option value="チャンバー">チャンバー</option>
+            </select>
           </div>
           <div style="flex:0 0 140px;">
             <label>&nbsp;</label>
@@ -138,8 +148,8 @@
 
         <div class="row" style="align-items:flex-end;">
           <div>
-            <label>検索（商品名/メモ/バーコード）</label>
-            <input id="inSearch" placeholder="例）牛乳 / 冷蔵 / 490..." />
+            <label>検索（商品名 / 保存場所）</label>
+            <input id="inSearch" placeholder="例）Guinness / ベルギー / チャンバー" />
           </div>
           <div style="flex:0 0 180px;">
             <label>並び順</label>
@@ -175,6 +185,11 @@
 
         <div id="list" class="list"></div>
         <div id="empty" class="muted" style="margin-top:8px;">データがありません。</div>
+
+        <div class="help">
+          <b>同期：</b>別のiPadで追加/更新/削除すると、この画面も自動更新します（Realtime）。<br/>
+          <b>保存場所：</b>VerBでは DBの <code>note</code> に保存場所を入れてます（UI上は保存場所として表示）。
+        </div>
       </div>
     </section>
   </main>
@@ -186,11 +201,15 @@
 
   <script>
     // ==========
-    // Utilities
+    // VerB: ボトルビール + 保存場所 + 設定欄ログイン後非表示
+    // 保存場所はDBの note カラムに保存（DB変更なしでまず動かす）
     // ==========
+
     const LS_URL_KEY = "sb_url";
     const LS_ANON_KEY = "sb_anon";
     const $ = (id) => document.getElementById(id);
+
+    const LOCATIONS = ["ビアタップチャンバー","イギリス","チェコ","ベルギー","チャンバー"];
 
     let supabaseClient = null;
     let realtimeChannel = null;
@@ -242,6 +261,12 @@
       return "good";
     }
 
+    function normalizeLocationFromRow(row) {
+      // VerBでは note を「保存場所」として扱う
+      const v = (row?.note || "").trim();
+      return LOCATIONS.includes(v) ? v : "";
+    }
+
     function ensureSupabase() {
       setLibStatus();
       if (!(window.supabase && typeof window.supabase.createClient === "function")) {
@@ -256,7 +281,6 @@
         return null;
       }
 
-      // 既に作成済みなら再利用
       if (!supabaseClient) {
         supabaseClient = window.supabase.createClient(url, key);
       }
@@ -288,6 +312,9 @@
       $("authCard").classList.toggle("hidden", loggedIn);
       $("appCard").classList.toggle("hidden", !loggedIn);
       $("btnLogout").classList.toggle("hidden", !loggedIn);
+
+      // ✅ ログイン後は設定欄を隠す（誤操作防止）
+      $("cfgCard").classList.toggle("hidden", loggedIn);
 
       $("who").textContent = loggedIn ? `ログイン中: ${session.user.email}` : "";
 
@@ -409,25 +436,33 @@
 
       const name = $("inName").value.trim();
       const exp = $("inExp").value;
-      const qty = parseInt($("inQty").value, 10) || 1;
-      const note = $("inNote").value.trim();
+      const qtyRaw = $("inQty").value;
+      const qty = parseInt(qtyRaw, 10);
+      const loc = $("inLoc").value.trim();
 
       if (!name) return toast("商品名を入力してね");
       if (!exp) return toast("賞味期限を選んでね");
-      if (qty < 1) return toast("数量は1以上にしてね");
+      if (!Number.isFinite(qty) || qty < 1) return toast("数量は1以上（0はNG）");
+      if (!loc) return toast("保存場所を選んでね");
 
       $("btnAdd").disabled = true;
       try {
+        // 保存場所は note に入れる（DB変更なしの暫定）
         const { error } = await sb
           .from("items")
-          .insert([{ name, expiration_date: exp, quantity: qty, note: note || null }]);
+          .insert([{
+            name,
+            expiration_date: exp,
+            quantity: qty,
+            note: loc
+          }]);
 
         if (error) throw error;
 
         $("inName").value = "";
         $("inExp").value = formatDateYMD(new Date());
         $("inQty").value = "1";
-        $("inNote").value = "";
+        $("inLoc").value = "";
         toast("追加しました");
         await reloadItems(false);
       } catch (e) {
@@ -473,11 +508,11 @@
     function filteredItems() {
       const q = $("inSearch").value.trim().toLowerCase();
       if (!q) return itemsCache;
+
       return itemsCache.filter(it => {
         const a = (it.name || "").toLowerCase();
-        const b = (it.note || "").toLowerCase();
-        const c = (it.barcode || "").toLowerCase();
-        return a.includes(q) || b.includes(q) || c.includes(q);
+        const loc = normalizeLocationFromRow(it).toLowerCase();
+        return a.includes(q) || loc.includes(q);
       });
     }
 
@@ -505,6 +540,7 @@
       for (const it of list) {
         const diff = daysDiffFromToday(it.expiration_date);
         const cls = badgeClass(diff);
+        const loc = normalizeLocationFromRow(it) || "（未設定）";
 
         const card = document.createElement("div");
         card.className = "item";
@@ -518,6 +554,10 @@
 
         const meta = document.createElement("div");
         meta.className = "meta";
+
+        const pLoc = document.createElement("div");
+        pLoc.className = "pill";
+        pLoc.textContent = `保存場所: ${loc}`;
 
         const p1 = document.createElement("div");
         p1.className = `pill ${cls}`;
@@ -533,16 +573,10 @@
         p3.className = "pill";
         p3.textContent = `数量: ${it.quantity}`;
 
+        meta.appendChild(pLoc);
         meta.appendChild(p1);
         meta.appendChild(p2);
         meta.appendChild(p3);
-
-        if (it.note) {
-          const p4 = document.createElement("div");
-          p4.className = "pill";
-          p4.textContent = `メモ: ${it.note}`;
-          meta.appendChild(p4);
-        }
 
         left.appendChild(name);
         left.appendChild(meta);
@@ -561,22 +595,26 @@
           const newExp = prompt("賞味期限（YYYY-MM-DD）", it.expiration_date);
           if (newExp === null) return;
 
-          const newQty = prompt("数量", String(it.quantity));
+          const newQty = prompt("数量（0はNG）", String(it.quantity));
           if (newQty === null) return;
 
-          const newNote = prompt("メモ（空OK）", it.note || "");
-          if (newNote === null) return;
+          const curLoc = normalizeLocationFromRow(it);
+          const newLoc = prompt("保存場所（下からコピペ）\n- ビアタップチャンバー\n- イギリス\n- チェコ\n- ベルギー\n- チャンバー", curLoc || "");
+          if (newLoc === null) return;
 
           const qtyInt = parseInt(newQty, 10);
+          const locTrim = (newLoc || "").trim();
+
           if (!newName.trim()) return toast("商品名が空です");
           if (!/^\d{4}-\d{2}-\d{2}$/.test(newExp.trim())) return toast("賞味期限形式が違います");
-          if (!Number.isFinite(qtyInt) || qtyInt < 1) return toast("数量は1以上");
+          if (!Number.isFinite(qtyInt) || qtyInt < 1) return toast("数量は1以上（0はNG）");
+          if (!LOCATIONS.includes(locTrim)) return toast("保存場所が指定の5種ではありません");
 
           updateItem(it.id, {
             name: newName.trim(),
             expiration_date: newExp.trim(),
             quantity: qtyInt,
-            note: newNote.trim() ? newNote.trim() : null
+            note: locTrim
           });
         };
 
@@ -614,9 +652,6 @@
     $("password").addEventListener("keydown", (e) => {
       if (e.key === "Enter") login();
     });
-    $("inNote").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") addItem();
-    });
 
     $("inExp").value = formatDateYMD(new Date());
 
@@ -625,7 +660,6 @@
     setLibStatus();
 
     (async () => {
-      // URL/KEYが入ってる場合だけセッション確認
       if (($("sbUrl").value || "").trim() && ($("sbKey").value || "").trim()) {
         ensureSupabase();
       }
@@ -636,7 +670,6 @@
         toast(`初期化失敗: ${e.message || e}`);
       }
 
-      // Auth状態変化に追従（クライアントが作れてる時だけ）
       const sb = ensureSupabase();
       if (sb) {
         sb.auth.onAuthStateChange(async () => {
