@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>賞味期限管理（ボトルビール）</title>
   <style>
-    :root { --pad: 14px; --r: 12px; }
+    :root { --pad: 14px; --r: 12px; --shadow: 0 1px 0 rgba(0,0,0,0.02); }
     body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif; margin:0; background:#f6f7f9; }
     header { position: sticky; top:0; background:white; border-bottom:1px solid #e7e7e7; padding:12px var(--pad); z-index:10; }
     header h1 { margin:0; font-size:18px; }
-    main { padding: var(--pad); max-width: 900px; margin: 0 auto; }
-    .card { background:white; border:1px solid #e7e7e7; border-radius: var(--r); padding: var(--pad); box-shadow: 0 1px 0 rgba(0,0,0,0.02); }
+    main { padding: var(--pad); max-width: 980px; margin: 0 auto; }
+    .card { background:white; border:1px solid #e7e7e7; border-radius: var(--r); padding: var(--pad); box-shadow: var(--shadow); }
     .row { display:flex; gap:10px; flex-wrap:wrap; }
     .row > * { flex: 1 1 160px; }
     label { display:block; font-size:12px; color:#555; margin:0 0 4px; }
@@ -23,15 +23,15 @@
     .muted { color:#666; font-size:12px; }
     .hidden { display:none !important; }
     .list { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
-    .item { display:flex; gap:10px; align-items:flex-start; justify-content:space-between; border:1px solid #eee; border-radius:12px; padding:12px; }
+    .item { display:flex; gap:12px; align-items:flex-start; justify-content:space-between; border:1px solid #eee; border-radius:14px; padding:12px; background:#fff; }
     .item .left { min-width: 0; flex: 1; }
-    .item .name { font-weight: 700; font-size:16px; margin:0 0 6px; word-break:break-word; }
-    .item .meta { display:flex; gap:10px; flex-wrap:wrap; font-size:13px; color:#444; }
-    .pill { padding:4px 8px; border-radius:999px; background:#f1f3f5; border:1px solid #e9ecef; }
+    .item .name { font-weight: 800; font-size:16px; margin:0 0 6px; word-break:break-word; }
+    .item .meta { display:flex; gap:8px; flex-wrap:wrap; font-size:13px; color:#444; }
+    .pill { padding:5px 9px; border-radius:999px; background:#f1f3f5; border:1px solid #e9ecef; }
     .warn { background:#fff4e6; border-color:#ffe0b2; }
     .bad { background:#ffe3e3; border-color:#ffb3b3; }
     .good { background:#e6fcf5; border-color:#b2f2e5; }
-    .right { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .right { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; align-items:flex-start; }
     .toast { position: fixed; left:50%; transform:translateX(-50%); bottom: 18px; background:#111; color:#fff; padding:10px 12px; border-radius: 999px; font-size: 13px; opacity:0; pointer-events:none; transition:opacity .15s ease; max-width: 92vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .toast.show { opacity: 1; }
     .topbar { display:flex; justify-content:space-between; align-items:center; gap:10px; }
@@ -39,12 +39,74 @@
     .hr { height:1px; background:#eee; margin:12px 0; }
     .help { font-size:12px; color:#666; line-height:1.6; }
     .kpi { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
-    .kpi .box { border:1px solid #eee; border-radius:12px; padding:10px; background:#fafafa; min-width: 120px; }
-    .kpi .n { font-size:18px; font-weight:800; }
+    .kpi .box { border:1px solid #eee; border-radius:14px; padding:10px; background:#fafafa; min-width: 120px; }
+    .kpi .n { font-size:18px; font-weight:900; }
     .kpi .t { font-size:12px; color:#666; }
     .status { font-size:12px; color:#666; padding:8px 10px; border:1px dashed #ddd; border-radius:12px; background:#fafafa; }
+
+    /* Tabs */
+    .tabs { display:flex; gap:8px; flex-wrap:wrap; }
+    .tab {
+      width:auto;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid #ddd;
+      background:#fff;
+      color:#111;
+      font-size:13px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active {
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    /* Quantity stepper */
+    .stepper { display:flex; align-items:center; gap:6px; }
+    .stepper button {
+      width:auto;
+      padding:8px 10px;
+      border-radius:12px;
+      background:#fff;
+      color:#111;
+    }
+    .stepper .qty {
+      min-width: 44px;
+      text-align:center;
+      padding:8px 10px;
+      border:1px solid #ddd;
+      border-radius:12px;
+      background:#fafafa;
+      font-weight:800;
+    }
+
+    /* Modal */
+    .modalBackdrop {
+      position: fixed; inset:0; background: rgba(0,0,0,0.35);
+      display:none; align-items:center; justify-content:center; padding: 18px;
+      z-index: 9999;
+    }
+    .modalBackdrop.show { display:flex; }
+    .modal {
+      width: min(720px, 100%);
+      background:#fff;
+      border-radius: 16px;
+      border: 1px solid #e7e7e7;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.18);
+      padding: 14px;
+    }
+    .modal h3 { margin: 6px 0 10px; font-size: 16px; }
+    .modal .actions { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; margin-top: 10px; }
+    .modal .actions button { width:auto; }
+    .modal .actions .danger { color:#fff; }
+    .modal .actions .secondary { color:#111; }
+
     @media (max-width:480px){
       header h1 { font-size:16px; }
+      .item { flex-direction:column; }
+      .right { justify-content:flex-start; }
     }
   </style>
 </head>
@@ -60,7 +122,7 @@
   </header>
 
   <main class="stack">
-    <!-- 設定（ログイン後は非表示にする：誤動作防止） -->
+    <!-- 設定（ログイン後は非表示） -->
     <section id="cfgCard" class="card">
       <div class="stack">
         <div class="help">
@@ -114,21 +176,28 @@
     <!-- アプリ本体 -->
     <section id="appCard" class="card hidden">
       <div class="stack">
+        <!-- 保存場所タブ -->
+        <div class="stack">
+          <div class="muted">保存場所で絞り込み</div>
+          <div id="tabs" class="tabs"></div>
+        </div>
+
+        <!-- 追加フォーム（必須だけ） -->
         <div class="row" style="align-items:flex-end;">
-          <div style="flex: 2 1 220px;">
-            <label>商品名（ボトルビール）</label>
+          <div style="flex: 2 1 240px;">
+            <label>商品名（必須）</label>
             <input id="inName" placeholder="例）Guinness / Pilsner / Lambic など" />
           </div>
           <div>
-            <label>賞味期限</label>
+            <label>賞味期限（必須）</label>
             <input id="inExp" type="date" />
           </div>
-          <div>
-            <label>数量（0はNG）</label>
+          <div style="flex: 1 1 160px;">
+            <label>数量（必須 / 0はNG）</label>
             <input id="inQty" type="number" inputmode="numeric" min="1" step="1" value="1" />
           </div>
           <div style="flex: 2 1 220px;">
-            <label>保存場所</label>
+            <label>保存場所（必須）</label>
             <select id="inLoc">
               <option value="">選択してね</option>
               <option value="ビアタップチャンバー">ビアタップチャンバー</option>
@@ -146,14 +215,16 @@
 
         <div class="hr"></div>
 
+        <!-- 検索＆並び -->
         <div class="row" style="align-items:flex-end;">
           <div>
-            <label>検索（商品名 / 保存場所）</label>
-            <input id="inSearch" placeholder="例）Guinness / ベルギー / チャンバー" />
+            <label>検索（商品名）</label>
+            <input id="inSearch" placeholder="例）Guinness / Pilsner" />
           </div>
-          <div style="flex:0 0 180px;">
+          <div style="flex:0 0 220px;">
             <label>並び順</label>
             <select id="selSort">
+              <option value="exp_practice">おすすめ（期限切れ→近い→遠い）</option>
               <option value="exp_asc">賞味期限（近い→遠い）</option>
               <option value="exp_desc">賞味期限（遠い→近い）</option>
               <option value="created_desc">追加（新しい→古い）</option>
@@ -187,22 +258,61 @@
         <div id="empty" class="muted" style="margin-top:8px;">データがありません。</div>
 
         <div class="help">
+          <b>操作：</b>数量は「＋/－」で素早く変更、詳細変更は「編集」。<br/>
           <b>同期：</b>別のiPadで追加/更新/削除すると、この画面も自動更新します（Realtime）。<br/>
-          <b>保存場所：</b>VerBでは DBの <code>note</code> に保存場所を入れてます（UI上は保存場所として表示）。
+          <b>注意：</b>VerCでは保存場所をDBの <code>note</code> に保存しています（DB変更なしでまずテスト）。
         </div>
       </div>
     </section>
   </main>
 
+  <!-- Modal（編集） -->
+  <div id="modalBackdrop" class="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+      <h3>編集</h3>
+      <div class="row">
+        <div style="flex: 2 1 240px;">
+          <label>商品名（必須）</label>
+          <input id="mName" />
+        </div>
+        <div>
+          <label>賞味期限（必須）</label>
+          <input id="mExp" type="date" />
+        </div>
+        <div>
+          <label>数量（必須 / 0はNG）</label>
+          <input id="mQty" type="number" min="1" step="1" inputmode="numeric" />
+        </div>
+        <div style="flex: 2 1 220px;">
+          <label>保存場所（必須）</label>
+          <select id="mLoc">
+            <option value="">選択してね</option>
+            <option value="ビアタップチャンバー">ビアタップチャンバー</option>
+            <option value="イギリス">イギリス</option>
+            <option value="チェコ">チェコ</option>
+            <option value="ベルギー">ベルギー</option>
+            <option value="チャンバー">チャンバー</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="mCancel" type="button" class="secondary">キャンセル</button>
+        <button id="mSave" type="button">保存</button>
+        <button id="mDelete" type="button" class="danger">削除</button>
+      </div>
+      <div class="muted" id="mHint" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
-  <!-- ✅ Supabase JS (UMDの正しいパス) -->
+  <!-- ✅ Supabase JS (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <script>
     // ==========
-    // VerB: ボトルビール + 保存場所 + 設定欄ログイン後非表示
-    // 保存場所はDBの note カラムに保存（DB変更なしでまず動かす）
+    // VerC: アプリ部分ブラッシュアップ（タブ / モーダル / 数量＋－ / 現場向けソート）
+    // 保存場所はDBの note に保存（DB変更なし）
     // ==========
 
     const LS_URL_KEY = "sb_url";
@@ -210,10 +320,16 @@
     const $ = (id) => document.getElementById(id);
 
     const LOCATIONS = ["ビアタップチャンバー","イギリス","チェコ","ベルギー","チャンバー"];
+    const TAB_ALL = "__ALL__";
 
     let supabaseClient = null;
     let realtimeChannel = null;
     let itemsCache = [];
+    let activeLoc = TAB_ALL;
+
+    // modal state
+    let modalOpen = false;
+    let editingId = null;
 
     function toast(msg) {
       const el = $("toast");
@@ -222,7 +338,6 @@
       setTimeout(() => el.classList.remove("show"), 2200);
     }
 
-    // どこで落ちても画面に出す（「無反応」対策）
     window.addEventListener("error", (e) => {
       toast(`JSエラー: ${e.message}`);
       console.error(e.error || e);
@@ -262,7 +377,6 @@
     }
 
     function normalizeLocationFromRow(row) {
-      // VerBでは note を「保存場所」として扱う
       const v = (row?.note || "").trim();
       return LOCATIONS.includes(v) ? v : "";
     }
@@ -296,7 +410,31 @@
       localStorage.setItem(LS_URL_KEY, $("sbUrl").value.trim());
       localStorage.setItem(LS_ANON_KEY, $("sbKey").value.trim());
       toast("設定を保存しました");
-      supabaseClient = null; // 作り直し
+      supabaseClient = null;
+    }
+
+    // ==========
+    // Tabs
+    // ==========
+    function buildTabs() {
+      const wrap = $("tabs");
+      wrap.innerHTML = "";
+
+      const makeTab = (label, value) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "tab" + (activeLoc === value ? " active" : "");
+        b.textContent = label;
+        b.onclick = () => {
+          activeLoc = value;
+          buildTabs();
+          render();
+        };
+        return b;
+      };
+
+      wrap.appendChild(makeTab("全件", TAB_ALL));
+      for (const loc of LOCATIONS) wrap.appendChild(makeTab(loc, loc));
     }
 
     // ==========
@@ -312,13 +450,12 @@
       $("authCard").classList.toggle("hidden", loggedIn);
       $("appCard").classList.toggle("hidden", !loggedIn);
       $("btnLogout").classList.toggle("hidden", !loggedIn);
-
-      // ✅ ログイン後は設定欄を隠す（誤操作防止）
       $("cfgCard").classList.toggle("hidden", loggedIn);
 
       $("who").textContent = loggedIn ? `ログイン中: ${session.user.email}` : "";
 
       if (loggedIn) {
+        buildTabs();
         await startRealtime();
         await reloadItems(false);
       } else {
@@ -336,10 +473,7 @@
       const email = $("email").value.trim();
       const password = $("password").value;
 
-      if (!email || !password) {
-        toast("メールとパスワードを入力してね");
-        return;
-      }
+      if (!email || !password) return toast("メールとパスワードを入力してね");
 
       $("btnLogin").disabled = true;
       try {
@@ -373,13 +507,9 @@
 
       realtimeChannel = sb
         .channel("rt-items")
-        .on("postgres_changes",
-          { event: "*", schema: "public", table: "items" },
-          async () => {
-            await reloadItems(false);
-            toast("同期更新");
-          }
-        )
+        .on("postgres_changes", { event: "*", schema: "public", table: "items" }, async () => {
+          await reloadItems(false);
+        })
         .subscribe();
     }
 
@@ -397,28 +527,51 @@
     // ==========
     function getSortSpec() {
       const v = $("selSort").value;
-      if (v === "exp_asc") return { col: "expiration_date", asc: true };
-      if (v === "exp_desc") return { col: "expiration_date", asc: false };
-      if (v === "created_asc") return { col: "created_at", asc: true };
-      if (v === "created_desc") return { col: "created_at", asc: false };
-      if (v === "name_asc") return { col: "name", asc: true };
-      if (v === "name_desc") return { col: "name", asc: false };
-      return { col: "expiration_date", asc: true };
+      if (v === "exp_asc") return { kind: "db", col: "expiration_date", asc: true };
+      if (v === "exp_desc") return { kind: "db", col: "expiration_date", asc: false };
+      if (v === "created_asc") return { kind: "db", col: "created_at", asc: true };
+      if (v === "created_desc") return { kind: "db", col: "created_at", asc: false };
+      if (v === "name_asc") return { kind: "db", col: "name", asc: true };
+      if (v === "name_desc") return { kind: "db", col: "name", asc: false };
+      // exp_practice は取得後にJSで“現場向け”整列
+      return { kind: "practice" };
+    }
+
+    function sortPractice(list) {
+      // 期限切れ(負)が先、その後は残日数が小さい順（近い順）
+      // 同率なら保存場所→商品名
+      return [...list].sort((a,b) => {
+        const da = daysDiffFromToday(a.expiration_date);
+        const db = daysDiffFromToday(b.expiration_date);
+        if (da !== db) return da - db;
+        const la = normalizeLocationFromRow(a) || "";
+        const lb = normalizeLocationFromRow(b) || "";
+        if (la !== lb) return la.localeCompare(lb, "ja");
+        return (a.name || "").localeCompare((b.name || ""), "ja");
+      });
     }
 
     async function reloadItems(showToast = true) {
       const sb = ensureSupabase();
       if (!sb) return;
+
       const sort = getSortSpec();
-
       $("btnReload").disabled = true;
-      try {
-        const { data, error } = await sb
-          .from("items")
-          .select("*")
-          .order(sort.col, { ascending: sort.asc });
 
+      try {
+        let q = sb.from("items").select("*");
+
+        // DB側ソートできるものはDBで
+        if (sort.kind === "db") {
+          q = q.order(sort.col, { ascending: sort.asc });
+        } else {
+          // practiceの場合はとりあえず期限日昇順で取って、JSで整列
+          q = q.order("expiration_date", { ascending: true });
+        }
+
+        const { data, error } = await q;
         if (error) throw error;
+
         itemsCache = data || [];
         render();
         if (showToast) toast("読み込みました");
@@ -430,39 +583,42 @@
       }
     }
 
+    function validateItem(name, exp, qty, loc) {
+      if (!name) return "商品名を入力してね";
+      if (!exp) return "賞味期限を選んでね";
+      if (!Number.isFinite(qty) || qty < 1) return "数量は1以上（0はNG）";
+      if (!loc) return "保存場所を選んでね";
+      if (!LOCATIONS.includes(loc)) return "保存場所が不正です";
+      return "";
+    }
+
     async function addItem() {
       const sb = ensureSupabase();
       if (!sb) return;
 
       const name = $("inName").value.trim();
       const exp = $("inExp").value;
-      const qtyRaw = $("inQty").value;
-      const qty = parseInt(qtyRaw, 10);
+      const qty = parseInt($("inQty").value, 10);
       const loc = $("inLoc").value.trim();
 
-      if (!name) return toast("商品名を入力してね");
-      if (!exp) return toast("賞味期限を選んでね");
-      if (!Number.isFinite(qty) || qty < 1) return toast("数量は1以上（0はNG）");
-      if (!loc) return toast("保存場所を選んでね");
+      const msg = validateItem(name, exp, qty, loc);
+      if (msg) return toast(msg);
 
       $("btnAdd").disabled = true;
       try {
-        // 保存場所は note に入れる（DB変更なしの暫定）
-        const { error } = await sb
-          .from("items")
-          .insert([{
-            name,
-            expiration_date: exp,
-            quantity: qty,
-            note: loc
-          }]);
-
+        const { error } = await sb.from("items").insert([{
+          name,
+          expiration_date: exp,
+          quantity: qty,
+          note: loc
+        }]);
         if (error) throw error;
 
+        // 次の入力を速く
         $("inName").value = "";
         $("inExp").value = formatDateYMD(new Date());
         $("inQty").value = "1";
-        $("inLoc").value = "";
+        // 保存場所は“連続入力”のため保持（消さない）
         toast("追加しました");
         await reloadItems(false);
       } catch (e) {
@@ -473,13 +629,13 @@
       }
     }
 
-    async function updateItem(id, patch) {
+    async function updateItem(id, patch, quiet=false) {
       const sb = ensureSupabase();
       if (!sb) return;
       try {
         const { error } = await sb.from("items").update(patch).eq("id", id);
         if (error) throw error;
-        toast("更新しました");
+        if (!quiet) toast("更新しました");
         await reloadItems(false);
       } catch (e) {
         console.error(e);
@@ -495,6 +651,7 @@
         const { error } = await sb.from("items").delete().eq("id", id);
         if (error) throw error;
         toast("削除しました");
+        closeModal();
         await reloadItems(false);
       } catch (e) {
         console.error(e);
@@ -502,18 +659,62 @@
       }
     }
 
+    async function adjustQty(id, currentQty, delta) {
+      const next = currentQty + delta;
+      if (next < 1) return toast("数量は1以上（0はNG）");
+      await updateItem(id, { quantity: next }, true);
+    }
+
+    // ==========
+    // Modal
+    // ==========
+    function openModal(item) {
+      editingId = item.id;
+      $("mName").value = item.name || "";
+      $("mExp").value = item.expiration_date || "";
+      $("mQty").value = String(item.quantity ?? 1);
+      $("mLoc").value = normalizeLocationFromRow(item) || "";
+
+      const diff = daysDiffFromToday(item.expiration_date);
+      const loc = normalizeLocationFromRow(item) || "未設定";
+      $("mHint").textContent = `保存場所: ${loc} / 残日数: ${diff < 0 ? (Math.abs(diff) + "日 期限切れ") : (diff === 0 ? "今日まで" : ("あと" + diff + "日"))}`;
+
+      $("modalBackdrop").classList.add("show");
+      $("modalBackdrop").setAttribute("aria-hidden", "false");
+      modalOpen = true;
+    }
+
+    function closeModal() {
+      $("modalBackdrop").classList.remove("show");
+      $("modalBackdrop").setAttribute("aria-hidden", "true");
+      modalOpen = false;
+      editingId = null;
+    }
+
     // ==========
     // Render
     // ==========
-    function filteredItems() {
+    function getFilteredAndSorted() {
       const q = $("inSearch").value.trim().toLowerCase();
-      if (!q) return itemsCache;
 
-      return itemsCache.filter(it => {
-        const a = (it.name || "").toLowerCase();
-        const loc = normalizeLocationFromRow(it).toLowerCase();
-        return a.includes(q) || loc.includes(q);
-      });
+      let list = itemsCache;
+
+      // location tab filter
+      if (activeLoc !== TAB_ALL) {
+        list = list.filter(it => normalizeLocationFromRow(it) === activeLoc);
+      }
+
+      // search by name
+      if (q) {
+        list = list.filter(it => (it.name || "").toLowerCase().includes(q));
+      }
+
+      // sorting
+      const sort = getSortSpec();
+      if (sort.kind === "practice") {
+        list = sortPractice(list);
+      }
+      return list;
     }
 
     function renderKpi(list) {
@@ -533,7 +734,7 @@
       const listEl = $("list");
       listEl.innerHTML = "";
 
-      const list = filteredItems();
+      const list = getFilteredAndSorted();
       renderKpi(list);
       $("empty").style.display = list.length ? "none" : "block";
 
@@ -569,14 +770,9 @@
         else if (diff === 0) p2.textContent = "今日まで";
         else p2.textContent = `あと${diff}日`;
 
-        const p3 = document.createElement("div");
-        p3.className = "pill";
-        p3.textContent = `数量: ${it.quantity}`;
-
         meta.appendChild(pLoc);
         meta.appendChild(p1);
         meta.appendChild(p2);
-        meta.appendChild(p3);
 
         left.appendChild(name);
         left.appendChild(meta);
@@ -584,52 +780,41 @@
         const right = document.createElement("div");
         right.className = "right";
 
+        // stepper
+        const step = document.createElement("div");
+        step.className = "stepper";
+
+        const btnMinus = document.createElement("button");
+        btnMinus.type = "button";
+        btnMinus.className = "secondary";
+        btnMinus.textContent = "－";
+        btnMinus.onclick = () => adjustQty(it.id, it.quantity, -1);
+
+        const qty = document.createElement("div");
+        qty.className = "qty";
+        qty.textContent = String(it.quantity);
+
+        const btnPlus = document.createElement("button");
+        btnPlus.type = "button";
+        btnPlus.className = "secondary";
+        btnPlus.textContent = "＋";
+        btnPlus.onclick = () => adjustQty(it.id, it.quantity, +1);
+
+        step.appendChild(btnMinus);
+        step.appendChild(qty);
+        step.appendChild(btnPlus);
+
         const btnEdit = document.createElement("button");
         btnEdit.type = "button";
         btnEdit.className = "secondary";
         btnEdit.textContent = "編集";
-        btnEdit.onclick = () => {
-          const newName = prompt("商品名", it.name);
-          if (newName === null) return;
+        btnEdit.onclick = () => openModal(it);
 
-          const newExp = prompt("賞味期限（YYYY-MM-DD）", it.expiration_date);
-          if (newExp === null) return;
-
-          const newQty = prompt("数量（0はNG）", String(it.quantity));
-          if (newQty === null) return;
-
-          const curLoc = normalizeLocationFromRow(it);
-          const newLoc = prompt("保存場所（下からコピペ）\n- ビアタップチャンバー\n- イギリス\n- チェコ\n- ベルギー\n- チャンバー", curLoc || "");
-          if (newLoc === null) return;
-
-          const qtyInt = parseInt(newQty, 10);
-          const locTrim = (newLoc || "").trim();
-
-          if (!newName.trim()) return toast("商品名が空です");
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(newExp.trim())) return toast("賞味期限形式が違います");
-          if (!Number.isFinite(qtyInt) || qtyInt < 1) return toast("数量は1以上（0はNG）");
-          if (!LOCATIONS.includes(locTrim)) return toast("保存場所が指定の5種ではありません");
-
-          updateItem(it.id, {
-            name: newName.trim(),
-            expiration_date: newExp.trim(),
-            quantity: qtyInt,
-            note: locTrim
-          });
-        };
-
-        const btnDel = document.createElement("button");
-        btnDel.type = "button";
-        btnDel.className = "danger";
-        btnDel.textContent = "削除";
-        btnDel.onclick = () => deleteItem(it.id);
-
+        right.appendChild(step);
         right.appendChild(btnEdit);
-        right.appendChild(btnDel);
 
         card.appendChild(left);
         card.appendChild(right);
-
         listEl.appendChild(card);
       }
     }
@@ -645,19 +830,56 @@
     $("btnLogin").addEventListener("click", login);
     $("btnLogout").addEventListener("click", logout);
     $("btnAdd").addEventListener("click", addItem);
+
     $("btnReload").addEventListener("click", () => reloadItems(true));
-    $("selSort").addEventListener("change", () => reloadItems(false));
+    $("selSort").addEventListener("change", () => render()); // practiceはJSなので再描画でOK
     $("inSearch").addEventListener("input", render);
 
     $("password").addEventListener("keydown", (e) => {
       if (e.key === "Enter") login();
     });
 
-    $("inExp").value = formatDateYMD(new Date());
+    // modal interactions
+    $("modalBackdrop").addEventListener("click", (e) => {
+      if (e.target === $("modalBackdrop")) closeModal();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (modalOpen && e.key === "Escape") closeModal();
+    });
+    $("mCancel").addEventListener("click", closeModal);
 
-    // 起動
+    $("mSave").addEventListener("click", async () => {
+      if (!editingId) return;
+
+      const name = $("mName").value.trim();
+      const exp = $("mExp").value;
+      const qty = parseInt($("mQty").value, 10);
+      const loc = $("mLoc").value.trim();
+
+      const msg = validateItem(name, exp, qty, loc);
+      if (msg) return toast(msg);
+
+      await updateItem(editingId, {
+        name,
+        expiration_date: exp,
+        quantity: qty,
+        note: loc
+      });
+      closeModal();
+    });
+
+    $("mDelete").addEventListener("click", async () => {
+      if (!editingId) return;
+      await deleteItem(editingId);
+    });
+
+    // init defaults
+    $("inExp").value = formatDateYMD(new Date());
+    $("selSort").value = "exp_practice";
+
     loadCfgFromLS();
     setLibStatus();
+    buildTabs();
 
     (async () => {
       if (($("sbUrl").value || "").trim() && ($("sbKey").value || "").trim()) {
