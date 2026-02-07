@@ -269,8 +269,9 @@
               inputmode="numeric"
               pattern="[0-9\-]*"
               maxlength="10"
-              placeholder="YYYYMMDD（例 20270203）"
+              placeholder="例）20270203（8桁）"
               autocomplete="off"
+              value=""
             />
             <div class="hintTiny">数字だけ入力OK（例: 20270203 → 2027-02-03）</div>
           </div>
@@ -351,8 +352,8 @@
         <div id="empty" class="muted" style="margin-top:8px;">データがありません。</div>
 
         <div class="help">
+          <b>VerN改善：</b>登録フォームの賞味期限は <b>空欄スタート</b>（毎回消さなくてOK）。8桁入力→自動整形。<br/>
           <b>VerM最適化：</b>検索入力（在庫検索・商品名候補）をデバウンスして、入力中の処理負荷を下げています。<br/>
-          <b>VerL最適化：</b>Realtimeは差分更新・一覧DOMも差分更新（全件作り直しをしません）。<br/>
           <b>在庫0：</b>編集や＋/－で在庫を0にすると <b>自動削除</b>されます（追加時は0禁止）。
         </div>
       </div>
@@ -375,7 +376,7 @@
             inputmode="numeric"
             pattern="[0-9\-]*"
             maxlength="10"
-            placeholder="YYYYMMDD（例 20270203）"
+            placeholder="例）20270203（8桁）"
             autocomplete="off"
           />
           <div class="hintTiny">数字だけ入力OK（例: 20270203 → 2027-02-03）</div>
@@ -464,7 +465,7 @@
     // Realtimeの連発をまとめる
     let renderScheduled = false;
 
-    // ===== VerM: デバウンス =====
+    // デバウンス
     function debounce(fn, waitMs) {
       let t = null;
       return (...args) => {
@@ -716,7 +717,7 @@
         renderProductSelect();
         syncInQtyUI();
         await startRealtime();
-        await reloadItems(true); // 初回だけ全件取得
+        await reloadItems(true);
       } else {
         await stopRealtime();
         itemsCache = [];
@@ -794,7 +795,7 @@
       }
     }
 
-    // ---- DB取得（初回/手動再読込のみ） ----
+    // ---- DB取得 ----
     async function reloadItems(showToast = true) {
       const sb = ensureSupabase();
       if (!sb) return;
@@ -950,7 +951,7 @@
         if (error) throw error;
 
         $("inName").value = "";
-        $("inExp").value = formatDateYMD(new Date());
+        $("inExp").value = "";          // ★ VerN: 追加後も空欄に戻す
         setInQty(1);
         $("inYomi").value = "";
         $("selProduct").value = "";
@@ -1349,7 +1350,6 @@
 
     function renderOptimized() {
       const listEl = $("list");
-
       const list = getFilteredAndSorted();
       renderKpi(list);
       $("empty").style.display = list.length ? "none" : "block";
@@ -1459,24 +1459,24 @@
     $("btnQtyUp").addEventListener("click", () => bumpInQty(+1));
     $("btnQtyDown").addEventListener("click", () => bumpInQty(-1));
 
-    // ===== VerM: デバウンス適用（入力のたびに重い処理を走らせない） =====
+    // デバウンス適用
     const debouncedStockSearch = debounce(() => {
       renderSuggestions();
       requestRender();
-    }, 200); // 150〜250ms推奨。まずは200ms
+    }, 200);
 
     const debouncedNameSuggest = debounce(() => {
       renderNameSuggestions();
     }, 160);
 
     $("inSearch").addEventListener("input", () => debouncedStockSearch());
-    $("inSearch").addEventListener("focus", () => renderSuggestions()); // フォーカスは即候補
+    $("inSearch").addEventListener("focus", () => renderSuggestions());
     $("inSearch").addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === "Escape") closeSuggestions();
     });
 
     $("inName").addEventListener("input", () => debouncedNameSuggest());
-    $("inName").addEventListener("focus", () => renderNameSuggestions()); // フォーカスは即候補
+    $("inName").addEventListener("focus", () => renderNameSuggestions());
     $("inName").addEventListener("keydown", (e) => {
       if (e.key === "Escape") closeNameSuggestions();
       if (e.key === "Enter") closeNameSuggestions();
@@ -1496,7 +1496,9 @@
     function closeSuggestions() { $("suggestBox").classList.remove("show"); suggestOpen = false; }
     function closeNameSuggestions() { $("nameSuggestBox").classList.remove("show"); nameSuggestOpen = false; }
 
-    $("inExp").value = formatDateYMD(new Date());
+    // ★ VerN: 登録フォームの賞味期限は空欄スタート
+    $("inExp").value = "";
+
     $("selSort").value = "exp_practice";
 
     loadCfgFromLS();
