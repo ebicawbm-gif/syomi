@@ -14,7 +14,8 @@
     .row { display:flex; gap:10px; flex-wrap:wrap; }
     .row > * { flex: 1 1 160px; }
     label { display:block; font-size:12px; color:#555; margin:0 0 4px; }
-    input, button, select { width:100%; box-sizing:border-box; padding:10px; border:1px solid #d9d9d9; border-radius:10px; font-size:15px; background:white; }
+    input, button, select, textarea { width:100%; box-sizing:border-box; padding:10px; border:1px solid #d9d9d9; border-radius:10px; font-size:15px; background:white; }
+    textarea { min-height: 220px; resize: vertical; }
     button { cursor:pointer; border:1px solid #cfcfcf; background:#111; color:white; }
     button.secondary { background:#fff; color:#111; }
     button.danger { background:#b00020; border-color:#b00020; }
@@ -23,19 +24,39 @@
     .muted { color:#666; font-size:12px; }
     .hidden { display:none !important; }
     .list { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
-    .item { display:flex; gap:12px; align-items:flex-start; justify-content:space-between; border:1px solid #eee; border-radius:14px; padding:12px; background:#fff; }
+
+    .item {
+      display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
+      border:1px solid #eee; border-radius:14px; padding:12px; background:#fff;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+    }
     .item .left { min-width: 0; flex: 1; }
     .item .name { font-weight: 800; font-size:16px; margin:0 0 6px; word-break:break-word; }
     .item .meta { display:flex; gap:8px; flex-wrap:wrap; font-size:13px; color:#444; }
+
+    /* 4パターン色分け（カード全体） */
+    .item.exp-normal  { background:#ffffff; border-color:#ececec; }
+    .item.exp-30days  { background:#fffbe6; border-color:#ffe58f; }
+    .item.exp-7days   { background:#fff4e6; border-color:#ffc069; }
+    .item.exp-expired { background:#ffe3e3; border-color:#ff9c9c; }
+
+    .item.exp-normal  { border-left: 6px solid #e9ecef; }
+    .item.exp-30days  { border-left: 6px solid #ffe58f; }
+    .item.exp-7days   { border-left: 6px solid #ffc069; }
+    .item.exp-expired { border-left: 6px solid #ff6b6b; }
+
     .pill { padding:5px 9px; border-radius:999px; background:#f1f3f5; border:1px solid #e9ecef; }
-    .warn { background:#fff4e6; border-color:#ffe0b2; }
-    .bad { background:#ffe3e3; border-color:#ffb3b3; }
-    .good { background:#e6fcf5; border-color:#b2f2e5; }
-    .right { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; align-items:flex-start; }
+    .pill.warn30 { background:#fffbe6; border-color:#ffe58f; }
+    .pill.warn7  { background:#fff4e6; border-color:#ffc069; }
+    .pill.bad    { background:#ffe3e3; border-color:#ff9c9c; }
+    .pill.good   { background:#e6fcf5; border-color:#b2f2e5; }
+
     .toast { position: fixed; left:50%; transform:translateX(-50%); bottom: 18px; background:#111; color:#fff; padding:10px 12px; border-radius: 999px; font-size: 13px; opacity:0; pointer-events:none; transition:opacity .15s ease; max-width: 92vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .toast.show { opacity: 1; }
     .topbar { display:flex; justify-content:space-between; align-items:center; gap:10px; }
     .topbar .who { font-size:12px; color:#666; word-break:break-all; }
+    .topActions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .topActions button { width:auto; padding:8px 10px; border-radius:12px; }
     .hr { height:1px; background:#eee; margin:12px 0; }
     .help { font-size:12px; color:#666; line-height:1.6; }
     .kpi { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
@@ -44,7 +65,6 @@
     .kpi .t { font-size:12px; color:#666; }
     .status { font-size:12px; color:#666; padding:8px 10px; border:1px dashed #ddd; border-radius:12px; background:#fafafa; }
 
-    /* Tabs */
     .tabs { display:flex; gap:8px; flex-wrap:wrap; }
     .tab {
       width:auto;
@@ -57,13 +77,8 @@
       cursor:pointer;
       user-select:none;
     }
-    .tab.active {
-      background:#111;
-      color:#fff;
-      border-color:#111;
-    }
+    .tab.active { background:#111; color:#fff; border-color:#111; }
 
-    /* Quantity stepper */
     .stepper { display:flex; align-items:center; gap:6px; }
     .stepper button {
       width:auto;
@@ -73,16 +88,49 @@
       color:#111;
     }
     .stepper .qty {
-      min-width: 44px;
+      min-width: 54px;
       text-align:center;
       padding:8px 10px;
       border:1px solid #ddd;
       border-radius:12px;
       background:#fafafa;
-      font-weight:800;
+      font-weight:900;
     }
 
-    /* Modal */
+    /* 登録用 数量ステッパー（上下矢印・押しやすい） */
+    .qtyStepper { display:flex; align-items:stretch; gap:10px; }
+    .qtyStepper .qtyDisplay {
+      flex: 1;
+      text-align:center;
+      padding:12px 10px;
+      border:1px solid #ddd;
+      border-radius:14px;
+      background:#fafafa;
+      font-weight:1000;
+      font-size:18px;
+      letter-spacing: .5px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-width: 84px;
+    }
+    .qtyStepper .qtyBtns { display:flex; flex-direction:column; gap:10px; flex: 0 0 70px; }
+    .qtyStepper .qtyBtn {
+      border-radius:14px;
+      padding:12px 0;
+      font-size:18px;
+      font-weight:900;
+      line-height:1;
+      background:#111;
+      color:#fff;
+      border:1px solid #111;
+      width:100%;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .qtyStepper .qtyBtn.secondaryLike { background:#fff; color:#111; border:1px solid #d0d0d0; }
+    .qtyStepper input[type="number"]{ display:none; }
+
     .modalBackdrop {
       position: fixed; inset:0; background: rgba(0,0,0,0.35);
       display:none; align-items:center; justify-content:center; padding: 18px;
@@ -90,7 +138,7 @@
     }
     .modalBackdrop.show { display:flex; }
     .modal {
-      width: min(720px, 100%);
+      width: min(820px, 100%);
       background:#fff;
       border-radius: 16px;
       border: 1px solid #e7e7e7;
@@ -100,8 +148,26 @@
     .modal h3 { margin: 6px 0 10px; font-size: 16px; }
     .modal .actions { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; margin-top: 10px; }
     .modal .actions button { width:auto; }
-    .modal .actions .danger { color:#fff; }
-    .modal .actions .secondary { color:#111; }
+
+    .suggestWrap { position: relative; }
+    .suggestBox {
+      position: absolute; left: 0; right: 0; top: calc(100% + 6px);
+      background: #fff; border: 1px solid #e7e7e7; border-radius: 14px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.10);
+      padding: 6px; z-index: 60; max-height: 280px; overflow: auto; display: none;
+    }
+    .suggestBox.show { display: block; }
+    .suggestItem {
+      width: 100%; text-align: left; border: 0; background: #fff; color: #111;
+      padding: 10px 10px; border-radius: 12px; cursor: pointer; font-size: 14px;
+      display: flex; gap: 8px; align-items: center; justify-content: space-between;
+    }
+    .suggestItem:hover { background: #f4f5f7; }
+    .suggestName { font-weight: 900; }
+    .suggestSub { font-size: 12px; color: #666; margin-top: 2px; }
+    .suggestRight { font-size: 12px; color: #444; white-space: nowrap; }
+    .hintTiny { font-size: 11px; color: #777; margin-top: 4px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
     @media (max-width:480px){
       header h1 { font-size:16px; }
@@ -114,7 +180,8 @@
   <header>
     <div class="topbar">
       <h1>賞味期限管理（ボトルビール）</h1>
-      <div>
+      <div class="topActions">
+        <button id="btnMaster" class="secondary hidden" type="button">商品マスター</button>
         <button id="btnLogout" class="secondary hidden" type="button">ログアウト</button>
       </div>
     </div>
@@ -122,7 +189,6 @@
   </header>
 
   <main class="stack">
-    <!-- 設定（ログイン後は非表示） -->
     <section id="cfgCard" class="card">
       <div class="stack">
         <div class="help">
@@ -148,7 +214,6 @@
       </div>
     </section>
 
-    <!-- ログイン -->
     <section id="authCard" class="card">
       <div class="stack">
         <h2 style="margin:0;font-size:16px;">ログイン</h2>
@@ -173,29 +238,58 @@
       </div>
     </section>
 
-    <!-- アプリ本体 -->
     <section id="appCard" class="card hidden">
       <div class="stack">
-        <!-- 保存場所タブ -->
         <div class="stack">
-          <div class="muted">保存場所で絞り込み</div>
+          <div class="muted">保存場所で絞り込み（タブ選択で追加フォーム保存場所も自動セット）</div>
           <div id="tabs" class="tabs"></div>
         </div>
 
-        <!-- 追加フォーム（必須だけ） -->
         <div class="row" style="align-items:flex-end;">
-          <div style="flex: 2 1 240px;">
-            <label>商品名（必須）</label>
-            <input id="inName" placeholder="例）Guinness / Pilsner / Lambic など" />
+          <div style="flex: 2 1 280px;">
+            <label>商品（プルダウン）</label>
+            <select id="selProduct">
+              <option value="">（手入力）</option>
+            </select>
+            <div id="selProductHint" class="hintTiny">※プルダウンでも選べます</div>
           </div>
+
+          <div class="suggestWrap" style="flex: 2 1 260px;">
+            <label>商品名（必須・手入力でマスター候補）</label>
+            <input id="inName" placeholder="例）台湾ビール" autocomplete="off" />
+            <div id="nameSuggestBox" class="suggestBox"></div>
+            <div class="hintTiny">例：マスターに「台湾ビール | たいわんびーる | チェコ」登録 → 商品名欄で「た」→候補表示</div>
+          </div>
+
           <div>
-            <label>賞味期限（必須）</label>
-            <input id="inExp" type="date" />
+            <label>賞味期限（必須 / 8桁入力→自動整形）</label>
+            <input
+              id="inExp"
+              type="tel"
+              inputmode="numeric"
+              pattern="[0-9\-]*"
+              maxlength="10"
+              placeholder="YYYYMMDD（例 20270203）"
+              autocomplete="off"
+            />
+            <div class="hintTiny">数字だけ入力OK（例: 20270203 → 2027-02-03）</div>
           </div>
-          <div style="flex: 1 1 160px;">
-            <label>数量（必須 / 0はNG）</label>
-            <input id="inQty" type="number" inputmode="numeric" min="1" step="1" value="1" />
+        </div>
+
+        <div class="row" style="align-items:flex-end;">
+          <div style="flex: 1 1 210px;">
+            <label>数量（登録時は1以上 / 0はNG）</label>
+            <div class="qtyStepper" aria-label="数量入力">
+              <div class="qtyDisplay" id="inQtyDisplay">1</div>
+              <div class="qtyBtns">
+                <button id="btnQtyUp" type="button" class="qtyBtn" aria-label="数量を増やす">▲</button>
+                <button id="btnQtyDown" type="button" class="qtyBtn secondaryLike" aria-label="数量を減らす">▼</button>
+              </div>
+              <input id="inQty" type="number" inputmode="numeric" min="1" step="1" value="1" />
+            </div>
+            <div class="hintTiny">▲▼で増減</div>
           </div>
+
           <div style="flex: 2 1 220px;">
             <label>保存場所（必須）</label>
             <select id="inLoc">
@@ -207,6 +301,13 @@
               <option value="チャンバー">チャンバー</option>
             </select>
           </div>
+
+          <div style="flex: 2 1 240px;">
+            <label>よみ（かな・任意）</label>
+            <input id="inYomi" placeholder="例）たいわんびーる" />
+            <div class="hintTiny">※かな検索候補用（DBの <code>barcode</code> に保存）</div>
+          </div>
+
           <div style="flex:0 0 140px;">
             <label>&nbsp;</label>
             <button id="btnAdd" type="button">追加</button>
@@ -215,11 +316,12 @@
 
         <div class="hr"></div>
 
-        <!-- 検索＆並び -->
         <div class="row" style="align-items:flex-end;">
-          <div>
-            <label>検索（商品名）</label>
-            <input id="inSearch" placeholder="例）Guinness / Pilsner" />
+          <div class="suggestWrap">
+            <label>検索（商品名 / よみ）</label>
+            <input id="inSearch" placeholder="例）g / ぎ / らん" autocomplete="off" />
+            <div id="suggestBox" class="suggestBox"></div>
+            <div class="hintTiny">※在庫一覧の検索です（追加用の候補とは別）</div>
           </div>
           <div style="flex:0 0 220px;">
             <label>並び順</label>
@@ -240,33 +342,23 @@
         </div>
 
         <div class="kpi">
-          <div class="box">
-            <div class="n" id="kpiTotal">0</div>
-            <div class="t">合計</div>
-          </div>
-          <div class="box">
-            <div class="n" id="kpiSoon">0</div>
-            <div class="t">3日以内</div>
-          </div>
-          <div class="box">
-            <div class="n" id="kpiExpired">0</div>
-            <div class="t">期限切れ</div>
-          </div>
+          <div class="box"><div class="n" id="kpiTotal">0</div><div class="t">合計</div></div>
+          <div class="box"><div class="n" id="kpiSoon">0</div><div class="t">3日以内</div></div>
+          <div class="box"><div class="n" id="kpiExpired">0</div><div class="t">期限切れ</div></div>
         </div>
 
         <div id="list" class="list"></div>
         <div id="empty" class="muted" style="margin-top:8px;">データがありません。</div>
 
         <div class="help">
-          <b>操作：</b>数量は「＋/－」で素早く変更、詳細変更は「編集」。<br/>
-          <b>同期：</b>別のiPadで追加/更新/削除すると、この画面も自動更新します（Realtime）。<br/>
-          <b>注意：</b>VerCでは保存場所をDBの <code>note</code> に保存しています（DB変更なしでまずテスト）。
+          <b>VerM最適化：</b>検索入力（在庫検索・商品名候補）をデバウンスして、入力中の処理負荷を下げています。<br/>
+          <b>VerL最適化：</b>Realtimeは差分更新・一覧DOMも差分更新（全件作り直しをしません）。<br/>
+          <b>在庫0：</b>編集や＋/－で在庫を0にすると <b>自動削除</b>されます（追加時は0禁止）。
         </div>
       </div>
     </section>
   </main>
 
-  <!-- Modal（編集） -->
   <div id="modalBackdrop" class="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal">
       <h3>編集</h3>
@@ -276,12 +368,21 @@
           <input id="mName" />
         </div>
         <div>
-          <label>賞味期限（必須）</label>
-          <input id="mExp" type="date" />
+          <label>賞味期限（必須 / 8桁入力→自動整形）</label>
+          <input
+            id="mExp"
+            type="tel"
+            inputmode="numeric"
+            pattern="[0-9\-]*"
+            maxlength="10"
+            placeholder="YYYYMMDD（例 20270203）"
+            autocomplete="off"
+          />
+          <div class="hintTiny">数字だけ入力OK（例: 20270203 → 2027-02-03）</div>
         </div>
         <div>
-          <label>数量（必須 / 0はNG）</label>
-          <input id="mQty" type="number" min="1" step="1" inputmode="numeric" />
+          <label>数量（0にすると自動削除）</label>
+          <input id="mQty" type="number" min="0" step="1" inputmode="numeric" />
         </div>
         <div style="flex: 2 1 220px;">
           <label>保存場所（必須）</label>
@@ -295,6 +396,13 @@
           </select>
         </div>
       </div>
+      <div class="row" style="align-items:flex-end;">
+        <div style="flex: 2 1 240px;">
+          <label>よみ（かな・任意）</label>
+          <input id="mYomi" placeholder="例）ぎねす" />
+          <div class="hintTiny">※かな検索候補用（DBの <code>barcode</code> に保存）</div>
+        </div>
+      </div>
       <div class="actions">
         <button id="mCancel" type="button" class="secondary">キャンセル</button>
         <button id="mSave" type="button">保存</button>
@@ -304,19 +412,33 @@
     </div>
   </div>
 
+  <div id="masterBackdrop" class="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+      <h3>商品マスター（端末ローカル）</h3>
+      <div class="help">
+        1行に1商品。形式：<code>商品名 | よみ(任意) | 保存場所</code><br/>
+        例：<code>台湾ビール | たいわんびーる | チェコ</code><br/>
+        保存場所はこの5つのみ：<b>ビアタップチャンバー / イギリス / チェコ / ベルギー / チャンバー</b>
+      </div>
+      <textarea id="masterText" spellcheck="false" placeholder="例）
+台湾ビール | たいわんびーる | チェコ
+ギネス | ぎねす | イギリス"></textarea>
+      <div class="actions">
+        <button id="masterClose" type="button" class="secondary">閉じる</button>
+        <button id="masterSave" type="button">保存</button>
+      </div>
+      <div class="muted" id="masterHint" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
-  <!-- ✅ Supabase JS (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <script>
-    // ==========
-    // VerC: アプリ部分ブラッシュアップ（タブ / モーダル / 数量＋－ / 現場向けソート）
-    // 保存場所はDBの note に保存（DB変更なし）
-    // ==========
-
     const LS_URL_KEY = "sb_url";
     const LS_ANON_KEY = "sb_anon";
+    const LS_MASTER_KEY = "product_master_v1";
     const $ = (id) => document.getElementById(id);
 
     const LOCATIONS = ["ビアタップチャンバー","イギリス","チェコ","ベルギー","チャンバー"];
@@ -324,12 +446,32 @@
 
     let supabaseClient = null;
     let realtimeChannel = null;
+
+    // データとDOMの差分管理
     let itemsCache = [];
+    let itemsById = new Map();
+    let itemElById = new Map();
     let activeLoc = TAB_ALL;
 
-    // modal state
     let modalOpen = false;
     let editingId = null;
+
+    let suggestOpen = false;
+    let nameSuggestOpen = false;
+
+    let productMaster = [];
+
+    // Realtimeの連発をまとめる
+    let renderScheduled = false;
+
+    // ===== VerM: デバウンス =====
+    function debounce(fn, waitMs) {
+      let t = null;
+      return (...args) => {
+        if (t) clearTimeout(t);
+        t = setTimeout(() => fn(...args), waitMs);
+      };
+    }
 
     function toast(msg) {
       const el = $("toast");
@@ -338,14 +480,8 @@
       setTimeout(() => el.classList.remove("show"), 2200);
     }
 
-    window.addEventListener("error", (e) => {
-      toast(`JSエラー: ${e.message}`);
-      console.error(e.error || e);
-    });
-    window.addEventListener("unhandledrejection", (e) => {
-      toast(`Promiseエラー: ${e.reason?.message || e.reason}`);
-      console.error(e.reason);
-    });
+    window.addEventListener("error", (e) => { toast(`JSエラー: ${e.message}`); console.error(e.error || e); });
+    window.addEventListener("unhandledrejection", (e) => { toast(`Promiseエラー: ${e.reason?.message || e.reason}`); console.error(e.reason); });
 
     function setLibStatus() {
       const ok = !!(window.supabase && typeof window.supabase.createClient === "function");
@@ -370,15 +506,56 @@
       return Math.round(ms / (1000 * 60 * 60 * 24));
     }
 
-    function badgeClass(diff) {
-      if (diff < 0) return "bad";
-      if (diff <= 3) return "warn";
+    function expiryBucket(diff) {
+      if (diff < 0) return "expired";
+      if (diff <= 7) return "7days";
+      if (diff <= 30) return "30days";
+      return "normal";
+    }
+    function pillClassByBucket(bucket) {
+      if (bucket === "expired") return "bad";
+      if (bucket === "7days") return "warn7";
+      if (bucket === "30days") return "warn30";
       return "good";
     }
 
-    function normalizeLocationFromRow(row) {
-      const v = (row?.note || "").trim();
-      return LOCATIONS.includes(v) ? v : "";
+    function toHiraganaLike(s) {
+      return (s || "").replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+    }
+    function normKey(s) {
+      return toHiraganaLike((s || "").trim().toLowerCase());
+    }
+
+    // ---- 8桁→YYYY-MM-DD 自動整形 ----
+    function onlyDigits(s) { return (s || "").replace(/[^\d]/g, ""); }
+    function formatExpDisplay(raw) {
+      const d = onlyDigits(raw).slice(0, 8);
+      if (d.length <= 4) return d;
+      if (d.length <= 6) return `${d.slice(0,4)}-${d.slice(4)}`;
+      return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
+    }
+    function isValidYMD(ymd) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return false;
+      const [y,m,d] = ymd.split("-").map(Number);
+      const dt = new Date(y, m-1, d);
+      return dt.getFullYear() === y && (dt.getMonth()+1) === m && dt.getDate() === d;
+    }
+    function normalizeExpToYMD(raw) {
+      const digits = onlyDigits(raw);
+      if (digits.length !== 8) return "";
+      const ymd = `${digits.slice(0,4)}-${digits.slice(4,6)}-${digits.slice(6,8)}`;
+      return isValidYMD(ymd) ? ymd : "";
+    }
+    function attachExpFormatter(inputEl) {
+      inputEl.addEventListener("input", () => {
+        const before = inputEl.value;
+        const formatted = formatExpDisplay(before);
+        if (before !== formatted) inputEl.value = formatted;
+      });
+      inputEl.addEventListener("blur", () => {
+        const ymd = normalizeExpToYMD(inputEl.value);
+        if (ymd) inputEl.value = ymd;
+      });
     }
 
     function ensureSupabase() {
@@ -387,17 +564,10 @@
         toast("supabase-js が読み込めてません（libStatusを確認）");
         return null;
       }
-
       const url = $("sbUrl").value.trim();
       const key = $("sbKey").value.trim();
-      if (!url || !key) {
-        toast("Supabase URL / 公開キーを設定してね");
-        return null;
-      }
-
-      if (!supabaseClient) {
-        supabaseClient = window.supabase.createClient(url, key);
-      }
+      if (!url || !key) { toast("Supabase URL / 公開キーを設定してね"); return null; }
+      if (!supabaseClient) supabaseClient = window.supabase.createClient(url, key);
       return supabaseClient;
     }
 
@@ -413,13 +583,98 @@
       supabaseClient = null;
     }
 
-    // ==========
-    // Tabs
-    // ==========
+    // ---- 商品マスター ----
+    function parseMasterText(text) {
+      const lines = (text || "").split(/\r?\n/);
+      const out = [];
+      for (const raw of lines) {
+        const line = raw.trim();
+        if (!line) continue;
+        let parts = line.split("|").map(s => s.trim());
+        if (parts.length === 1) parts = line.split(",").map(s => s.trim());
+        if (parts.length === 1) parts = line.split("\t").map(s => s.trim());
+        const name = (parts[0] || "").trim();
+        const yomi = (parts[1] || "").trim();
+        const loc = (parts[2] || "").trim();
+        if (!name) continue;
+        if (!LOCATIONS.includes(loc)) continue;
+        out.push({ name, yomi, loc });
+      }
+      out.sort((a,b) => a.loc.localeCompare(b.loc,"ja") || a.name.localeCompare(b.name,"ja"));
+      return out;
+    }
+
+    function masterToText(master) {
+      return (master || []).map(m => `${m.name} | ${m.yomi || ""} | ${m.loc}`).join("\n");
+    }
+
+    function loadMaster() {
+      try {
+        const raw = localStorage.getItem(LS_MASTER_KEY);
+        productMaster = raw ? (JSON.parse(raw) || []) : [];
+      } catch { productMaster = []; }
+      productMaster = (productMaster || []).filter(m => m && m.name && LOCATIONS.includes(m.loc));
+      renderProductSelect();
+    }
+
+    function saveMaster(master) {
+      productMaster = master;
+      localStorage.setItem(LS_MASTER_KEY, JSON.stringify(productMaster));
+      renderProductSelect();
+    }
+
+    function getMasterForCurrentLoc() {
+      if (activeLoc === TAB_ALL) return productMaster;
+      return productMaster.filter(m => m.loc === activeLoc);
+    }
+
+    function renderProductSelect() {
+      const sel = $("selProduct");
+      const current = sel.value;
+      const masters = getMasterForCurrentLoc();
+
+      sel.innerHTML = `<option value="">（手入力）</option>`;
+      for (let i=0; i<masters.length; i++) {
+        const m = masters[i];
+        const opt = document.createElement("option");
+        opt.value = String(i);
+        opt.textContent = `${m.name}（${m.loc}）`;
+        sel.appendChild(opt);
+      }
+
+      if (activeLoc === TAB_ALL) $("selProductHint").textContent = "※プルダウンでも選べます（全マスター）";
+      else $("selProductHint").textContent = `※プルダウンは「${activeLoc}」のマスターのみ表示`;
+
+      if (current !== "" && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
+      else sel.value = "";
+    }
+
+    function applyMasterItem(m) {
+      $("inName").value = m.name || "";
+      $("inYomi").value = m.yomi || "";
+      $("inLoc").value = m.loc || "";
+      activeLoc = m.loc;
+      buildTabs();
+      renderProductSelect();
+      requestRender();
+    }
+
+    function applyMasterSelection(indexStr) {
+      if (!indexStr) return;
+      const masters = getMasterForCurrentLoc();
+      const idx = parseInt(indexStr, 10);
+      if (!Number.isFinite(idx) || idx < 0 || idx >= masters.length) return;
+      applyMasterItem(masters[idx]);
+    }
+
+    // ---- Tabs ----
+    function applyTabToAddForm() {
+      if (activeLoc !== TAB_ALL) $("inLoc").value = activeLoc;
+    }
+
     function buildTabs() {
       const wrap = $("tabs");
       wrap.innerHTML = "";
-
       const makeTab = (label, value) => {
         const b = document.createElement("button");
         b.type = "button";
@@ -428,18 +683,17 @@
         b.onclick = () => {
           activeLoc = value;
           buildTabs();
-          render();
+          applyTabToAddForm();
+          renderProductSelect();
+          requestRender();
         };
         return b;
       };
-
       wrap.appendChild(makeTab("全件", TAB_ALL));
       for (const loc of LOCATIONS) wrap.appendChild(makeTab(loc, loc));
     }
 
-    // ==========
-    // Auth
-    // ==========
+    // ---- Auth ----
     async function refreshSessionUI() {
       const sb = ensureSupabase();
       if (!sb) return;
@@ -450,18 +704,25 @@
       $("authCard").classList.toggle("hidden", loggedIn);
       $("appCard").classList.toggle("hidden", !loggedIn);
       $("btnLogout").classList.toggle("hidden", !loggedIn);
+      $("btnMaster").classList.toggle("hidden", !loggedIn);
       $("cfgCard").classList.toggle("hidden", loggedIn);
 
       $("who").textContent = loggedIn ? `ログイン中: ${session.user.email}` : "";
 
       if (loggedIn) {
+        loadMaster();
         buildTabs();
+        applyTabToAddForm();
+        renderProductSelect();
+        syncInQtyUI();
         await startRealtime();
-        await reloadItems(false);
+        await reloadItems(true); // 初回だけ全件取得
       } else {
         await stopRealtime();
         itemsCache = [];
-        render();
+        itemsById.clear();
+        itemElById.clear();
+        requestRender();
       }
     }
 
@@ -472,7 +733,6 @@
 
       const email = $("email").value.trim();
       const password = $("password").value;
-
       if (!email || !password) return toast("メールとパスワードを入力してね");
 
       $("btnLogin").disabled = true;
@@ -497,9 +757,7 @@
       await refreshSessionUI();
     }
 
-    // ==========
-    // Realtime
-    // ==========
+    // ---- Realtime 差分更新 ----
     async function startRealtime() {
       const sb = ensureSupabase();
       if (!sb) return;
@@ -507,8 +765,22 @@
 
       realtimeChannel = sb
         .channel("rt-items")
-        .on("postgres_changes", { event: "*", schema: "public", table: "items" }, async () => {
-          await reloadItems(false);
+        .on("postgres_changes", { event: "*", schema: "public", table: "items" }, (payload) => {
+          try {
+            if (payload.eventType === "INSERT") {
+              upsertItemRow(payload.new);
+              requestRender();
+            } else if (payload.eventType === "UPDATE") {
+              upsertItemRow(payload.new);
+              requestRender();
+            } else if (payload.eventType === "DELETE") {
+              const id = (payload.old || {}).id;
+              if (id != null) removeItemById(id);
+              requestRender();
+            } else {
+              reloadItems(false);
+            }
+          } catch (e) { console.error(e); }
         })
         .subscribe();
     }
@@ -522,58 +794,22 @@
       }
     }
 
-    // ==========
-    // CRUD
-    // ==========
-    function getSortSpec() {
-      const v = $("selSort").value;
-      if (v === "exp_asc") return { kind: "db", col: "expiration_date", asc: true };
-      if (v === "exp_desc") return { kind: "db", col: "expiration_date", asc: false };
-      if (v === "created_asc") return { kind: "db", col: "created_at", asc: true };
-      if (v === "created_desc") return { kind: "db", col: "created_at", asc: false };
-      if (v === "name_asc") return { kind: "db", col: "name", asc: true };
-      if (v === "name_desc") return { kind: "db", col: "name", asc: false };
-      // exp_practice は取得後にJSで“現場向け”整列
-      return { kind: "practice" };
-    }
-
-    function sortPractice(list) {
-      // 期限切れ(負)が先、その後は残日数が小さい順（近い順）
-      // 同率なら保存場所→商品名
-      return [...list].sort((a,b) => {
-        const da = daysDiffFromToday(a.expiration_date);
-        const db = daysDiffFromToday(b.expiration_date);
-        if (da !== db) return da - db;
-        const la = normalizeLocationFromRow(a) || "";
-        const lb = normalizeLocationFromRow(b) || "";
-        if (la !== lb) return la.localeCompare(lb, "ja");
-        return (a.name || "").localeCompare((b.name || ""), "ja");
-      });
-    }
-
+    // ---- DB取得（初回/手動再読込のみ） ----
     async function reloadItems(showToast = true) {
       const sb = ensureSupabase();
       if (!sb) return;
 
-      const sort = getSortSpec();
       $("btnReload").disabled = true;
-
       try {
-        let q = sb.from("items").select("*");
-
-        // DB側ソートできるものはDBで
-        if (sort.kind === "db") {
-          q = q.order(sort.col, { ascending: sort.asc });
-        } else {
-          // practiceの場合はとりあえず期限日昇順で取って、JSで整列
-          q = q.order("expiration_date", { ascending: true });
-        }
-
-        const { data, error } = await q;
+        const { data, error } = await sb
+          .from("items")
+          .select("id,name,expiration_date,quantity,note,barcode,created_at");
         if (error) throw error;
 
         itemsCache = data || [];
-        render();
+        rebuildIndexFromCache();
+        requestRender();
+
         if (showToast) toast("読み込みました");
       } catch (e) {
         console.error(e);
@@ -583,10 +819,107 @@
       }
     }
 
-    function validateItem(name, exp, qty, loc) {
+    function rebuildIndexFromCache() {
+      itemsById.clear();
+      for (const it of itemsCache) itemsById.set(it.id, it);
+      for (const [id, el] of itemElById.entries()) {
+        if (!itemsById.has(id)) {
+          try { el.remove(); } catch {}
+          itemElById.delete(id);
+        }
+      }
+    }
+
+    function upsertItemRow(row) {
+      if (!row || row.id == null) return;
+      const id = row.id;
+
+      const existed = itemsById.has(id);
+      itemsById.set(id, row);
+
+      if (existed) {
+        const idx = itemsCache.findIndex(x => x.id === id);
+        if (idx >= 0) itemsCache[idx] = row;
+        else itemsCache.push(row);
+      } else {
+        itemsCache.push(row);
+      }
+    }
+
+    function removeItemById(id) {
+      itemsById.delete(id);
+      itemsCache = itemsCache.filter(x => x.id !== id);
+
+      const el = itemElById.get(id);
+      if (el) {
+        try { el.remove(); } catch {}
+        itemElById.delete(id);
+      }
+    }
+
+    // ---- CRUD ----
+    function getSortSpec() {
+      const v = $("selSort").value;
+      if (v === "exp_asc") return { kind: "exp", asc: true };
+      if (v === "exp_desc") return { kind: "exp", asc: false };
+      if (v === "created_asc") return { kind: "created", asc: true };
+      if (v === "created_desc") return { kind: "created", asc: false };
+      if (v === "name_asc") return { kind: "name", asc: true };
+      if (v === "name_desc") return { kind: "name", asc: false };
+      return { kind: "practice" };
+    }
+
+    function getFilteredAndSorted() {
+      const q = normKey($("inSearch").value);
+      let list = itemsCache;
+
+      if (activeLoc !== TAB_ALL) list = list.filter(it => ((it.note || "").trim() === activeLoc));
+
+      if (q) {
+        list = list.filter(it => {
+          const nk = normKey(it.name || "");
+          const yk = normKey((it.barcode || "").trim());
+          if (q.length <= 2) return nk.startsWith(q) || (yk && yk.startsWith(q));
+          return nk.includes(q) || (yk && yk.includes(q));
+        });
+      }
+
+      const sort = getSortSpec();
+      if (sort.kind === "practice") {
+        return [...list].sort((a,b) => {
+          const da = daysDiffFromToday(a.expiration_date);
+          const db = daysDiffFromToday(b.expiration_date);
+          if (da !== db) return da - db;
+          const la = ((a.note || "").trim()).localeCompare(((b.note || "").trim()), "ja");
+          if (la !== 0) return la;
+          return (a.name || "").localeCompare((b.name || ""), "ja");
+        });
+      }
+
+      return [...list].sort((a,b) => {
+        if (sort.kind === "exp") {
+          const aa = a.expiration_date || "";
+          const bb = b.expiration_date || "";
+          return sort.asc ? aa.localeCompare(bb) : bb.localeCompare(aa);
+        }
+        if (sort.kind === "created") {
+          const aa = a.created_at || "";
+          const bb = b.created_at || "";
+          return sort.asc ? aa.localeCompare(bb) : bb.localeCompare(aa);
+        }
+        if (sort.kind === "name") {
+          const aa = a.name || "";
+          const bb = b.name || "";
+          return sort.asc ? aa.localeCompare(bb,"ja") : bb.localeCompare(aa,"ja");
+        }
+        return 0;
+      });
+    }
+
+    function validateForInsert(name, expYMD, qty, loc) {
       if (!name) return "商品名を入力してね";
-      if (!exp) return "賞味期限を選んでね";
-      if (!Number.isFinite(qty) || qty < 1) return "数量は1以上（0はNG）";
+      if (!expYMD) return "賞味期限を8桁で入力してね（例: 20270203）";
+      if (!Number.isFinite(qty) || qty < 1) return "数量は1以上（登録時は0NG）";
       if (!loc) return "保存場所を選んでね";
       if (!LOCATIONS.includes(loc)) return "保存場所が不正です";
       return "";
@@ -597,30 +930,32 @@
       if (!sb) return;
 
       const name = $("inName").value.trim();
-      const exp = $("inExp").value;
+      const expYMD = normalizeExpToYMD($("inExp").value);
       const qty = parseInt($("inQty").value, 10);
       const loc = $("inLoc").value.trim();
+      const yomi = $("inYomi").value.trim();
 
-      const msg = validateItem(name, exp, qty, loc);
+      const msg = validateForInsert(name, expYMD, qty, loc);
       if (msg) return toast(msg);
 
       $("btnAdd").disabled = true;
       try {
         const { error } = await sb.from("items").insert([{
           name,
-          expiration_date: exp,
+          expiration_date: expYMD,
           quantity: qty,
-          note: loc
+          note: loc,
+          barcode: yomi ? yomi : null
         }]);
         if (error) throw error;
 
-        // 次の入力を速く
         $("inName").value = "";
         $("inExp").value = formatDateYMD(new Date());
-        $("inQty").value = "1";
-        // 保存場所は“連続入力”のため保持（消さない）
+        setInQty(1);
+        $("inYomi").value = "";
+        $("selProduct").value = "";
+        closeNameSuggestions();
         toast("追加しました");
-        await reloadItems(false);
       } catch (e) {
         console.error(e);
         toast(`追加失敗: ${e.message || e}`);
@@ -636,14 +971,13 @@
         const { error } = await sb.from("items").update(patch).eq("id", id);
         if (error) throw error;
         if (!quiet) toast("更新しました");
-        await reloadItems(false);
       } catch (e) {
         console.error(e);
         toast(`更新失敗: ${e.message || e}`);
       }
     }
 
-    async function deleteItem(id) {
+    async function deleteItemConfirm(id) {
       const sb = ensureSupabase();
       if (!sb) return;
       if (!confirm("削除しますか？")) return;
@@ -652,32 +986,62 @@
         if (error) throw error;
         toast("削除しました");
         closeModal();
-        await reloadItems(false);
       } catch (e) {
         console.error(e);
         toast(`削除失敗: ${e.message || e}`);
       }
     }
 
+    async function deleteItemAuto(id) {
+      const sb = ensureSupabase();
+      if (!sb) return;
+      try {
+        const { error } = await sb.from("items").delete().eq("id", id);
+        if (error) throw error;
+        toast("在庫0のため自動削除しました");
+        closeModal();
+      } catch (e) {
+        console.error(e);
+        toast(`自動削除失敗: ${e.message || e}`);
+      }
+    }
+
     async function adjustQty(id, currentQty, delta) {
-      const next = currentQty + delta;
-      if (next < 1) return toast("数量は1以上（0はNG）");
+      const next = (currentQty ?? 0) + delta;
+      if (next < 0) return;
+      if (next === 0) return await deleteItemAuto(id);
       await updateItem(id, { quantity: next }, true);
     }
 
-    // ==========
-    // Modal
-    // ==========
+    // ---- 登録フォーム数量ステッパー ----
+    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+    function syncInQtyUI() {
+      const v = parseInt($("inQty").value, 10);
+      const qty = Number.isFinite(v) ? v : 1;
+      $("inQty").value = String(clamp(qty, 1, 9999));
+      $("inQtyDisplay").textContent = $("inQty").value;
+    }
+    function setInQty(n) {
+      $("inQty").value = String(clamp(parseInt(n,10) || 1, 1, 9999));
+      syncInQtyUI();
+    }
+    function bumpInQty(delta) {
+      const cur = parseInt($("inQty").value, 10) || 1;
+      setInQty(cur + delta);
+    }
+
+    // ---- Edit Modal ----
     function openModal(item) {
       editingId = item.id;
       $("mName").value = item.name || "";
       $("mExp").value = item.expiration_date || "";
-      $("mQty").value = String(item.quantity ?? 1);
-      $("mLoc").value = normalizeLocationFromRow(item) || "";
+      $("mQty").value = String(item.quantity ?? 0);
+      $("mLoc").value = (item.note || "").trim();
+      $("mYomi").value = (item.barcode || "").trim();
 
       const diff = daysDiffFromToday(item.expiration_date);
-      const loc = normalizeLocationFromRow(item) || "未設定";
-      $("mHint").textContent = `保存場所: ${loc} / 残日数: ${diff < 0 ? (Math.abs(diff) + "日 期限切れ") : (diff === 0 ? "今日まで" : ("あと" + diff + "日"))}`;
+      const loc = (item.note || "").trim() || "未設定";
+      $("mHint").textContent = `保存場所: ${loc} / 残日数: ${diff < 0 ? (Math.abs(diff) + "日 期限切れ") : (diff === 0 ? "今日まで" : ("あと" + diff + "日"))} / 数量0で自動削除`;
 
       $("modalBackdrop").classList.add("show");
       $("modalBackdrop").setAttribute("aria-hidden", "false");
@@ -691,36 +1055,166 @@
       editingId = null;
     }
 
-    // ==========
-    // Render
-    // ==========
-    function getFilteredAndSorted() {
-      const q = $("inSearch").value.trim().toLowerCase();
+    // ---- 在庫検索候補 ----
+    function buildSuggestions(query) {
+      const q = normKey(query);
+      if (!q) return [];
 
-      let list = itemsCache;
+      let base = itemsCache;
+      if (activeLoc !== TAB_ALL) base = base.filter(it => ((it.note || "").trim() === activeLoc));
 
-      // location tab filter
-      if (activeLoc !== TAB_ALL) {
-        list = list.filter(it => normalizeLocationFromRow(it) === activeLoc);
+      const scored = [];
+      for (const it of base) {
+        const nk = normKey(it.name || "");
+        const yk = normKey((it.barcode || "").trim());
+        const nameHit = nk.startsWith(q);
+        const yomiHit = yk && yk.startsWith(q);
+        if (nameHit || yomiHit) {
+          let score = 0;
+          if (yomiHit) score += 2;
+          if (nameHit) score += 1;
+          scored.push({ it, score });
+        }
       }
 
-      // search by name
-      if (q) {
-        list = list.filter(it => (it.name || "").toLowerCase().includes(q));
+      scored.sort((a,b) => b.score - a.score);
+      const out = [];
+      const seen = new Set();
+      for (const s of scored) {
+        const it = s.it;
+        const key = `${it.name}__${(it.note||"").trim()}__${it.expiration_date}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(s);
+        if (out.length >= 10) break;
+      }
+      return out;
+    }
+
+    function closeSuggestions() {
+      $("suggestBox").classList.remove("show");
+      suggestOpen = false;
+    }
+
+    function renderSuggestions() {
+      const box = $("suggestBox");
+      const q = $("inSearch").value;
+      const list = buildSuggestions(q);
+
+      box.innerHTML = "";
+      if (!q.trim() || list.length === 0) { closeSuggestions(); return; }
+
+      for (const s of list) {
+        const it = s.it;
+        const loc = (it.note || "").trim() || "未設定";
+        const yomi = (it.barcode || "").trim();
+        const diff = daysDiffFromToday(it.expiration_date);
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "suggestItem";
+        btn.onclick = () => {
+          $("inSearch").value = it.name || "";
+          closeSuggestions();
+          requestRender();
+        };
+
+        const left = document.createElement("div");
+        const nm = document.createElement("div");
+        nm.className = "suggestName";
+        nm.textContent = it.name || "";
+        const sub = document.createElement("div");
+        sub.className = "suggestSub";
+        sub.textContent = `${loc}${yomi ? (" / よみ: " + yomi) : ""}`;
+        left.appendChild(nm);
+        left.appendChild(sub);
+
+        const right = document.createElement("div");
+        right.className = "suggestRight";
+        right.textContent = diff < 0 ? `${Math.abs(diff)}日 期限切れ` : (diff === 0 ? "今日まで" : `あと${diff}日`);
+
+        btn.appendChild(left);
+        btn.appendChild(right);
+        box.appendChild(btn);
       }
 
-      // sorting
-      const sort = getSortSpec();
-      if (sort.kind === "practice") {
-        list = sortPractice(list);
+      box.classList.add("show");
+      suggestOpen = true;
+    }
+
+    // ---- 商品名入力：マスター候補 ----
+    function buildNameSuggestions(query) {
+      const q = normKey(query);
+      if (!q) return [];
+      const out = [];
+      for (const m of productMaster) {
+        const nk = normKey(m.name || "");
+        const yk = normKey(m.yomi || "");
+        if (nk.startsWith(q) || (yk && yk.startsWith(q))) out.push(m);
+        if (out.length >= 10) break;
       }
-      return list;
+      return out;
+    }
+
+    function closeNameSuggestions() {
+      $("nameSuggestBox").classList.remove("show");
+      nameSuggestOpen = false;
+    }
+
+    function renderNameSuggestions() {
+      const box = $("nameSuggestBox");
+      const q = $("inName").value;
+      const list = buildNameSuggestions(q);
+
+      box.innerHTML = "";
+      if (!q.trim() || list.length === 0) { closeNameSuggestions(); return; }
+
+      for (const m of list) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "suggestItem";
+        btn.onclick = () => {
+          applyMasterItem(m);
+          closeNameSuggestions();
+          $("inExp").focus();
+        };
+
+        const left = document.createElement("div");
+        const nm = document.createElement("div");
+        nm.className = "suggestName";
+        nm.textContent = m.name || "";
+        const sub = document.createElement("div");
+        sub.className = "suggestSub";
+        sub.textContent = `${m.loc}${m.yomi ? (" / よみ: " + m.yomi) : ""}`;
+        left.appendChild(nm);
+        left.appendChild(sub);
+
+        const right = document.createElement("div");
+        right.className = "suggestRight";
+        right.textContent = "選択";
+
+        btn.appendChild(left);
+        btn.appendChild(right);
+        box.appendChild(btn);
+      }
+
+      box.classList.add("show");
+      nameSuggestOpen = true;
+    }
+
+    // ===== 描画のまとめ（coalescing） =====
+    function requestRender() {
+      if (renderScheduled) return;
+      renderScheduled = true;
+      requestAnimationFrame(() => {
+        renderScheduled = false;
+        renderOptimized();
+      });
     }
 
     function renderKpi(list) {
       $("kpiTotal").textContent = String(list.length);
-      let soon = 0;
-      let expired = 0;
+      let soon = 0, expired = 0;
       for (const it of list) {
         const d = daysDiffFromToday(it.expiration_date);
         if (d < 0) expired++;
@@ -730,174 +1224,300 @@
       $("kpiExpired").textContent = String(expired);
     }
 
-    function render() {
+    // ===== DOM差分更新＋並び替え（要素使い回し） =====
+    function buildItemElement(it) {
+      const card = document.createElement("div");
+      card.className = "item";
+      card.dataset.id = String(it.id);
+
+      const left = document.createElement("div");
+      left.className = "left";
+
+      const name = document.createElement("div");
+      name.className = "name";
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+
+      const pLoc = document.createElement("div");
+      pLoc.className = "pill";
+      pLoc.dataset.role = "loc";
+
+      const pExp = document.createElement("div");
+      pExp.className = "pill";
+      pExp.dataset.role = "exp";
+
+      const pRemain = document.createElement("div");
+      pRemain.className = "pill";
+      pRemain.dataset.role = "remain";
+
+      const pQty = document.createElement("div");
+      pQty.className = "pill";
+      pQty.dataset.role = "qty";
+
+      meta.appendChild(pLoc);
+      meta.appendChild(pExp);
+      meta.appendChild(pRemain);
+      meta.appendChild(pQty);
+
+      left.appendChild(name);
+      left.appendChild(meta);
+
+      const right = document.createElement("div");
+      right.className = "right";
+
+      const step = document.createElement("div");
+      step.className = "stepper";
+
+      const btnMinus = document.createElement("button");
+      btnMinus.type = "button";
+      btnMinus.className = "secondary";
+      btnMinus.textContent = "－";
+
+      const qtyBox = document.createElement("div");
+      qtyBox.className = "qty";
+      qtyBox.dataset.role = "qtybox";
+
+      const btnPlus = document.createElement("button");
+      btnPlus.type = "button";
+      btnPlus.className = "secondary";
+      btnPlus.textContent = "＋";
+
+      step.appendChild(btnMinus);
+      step.appendChild(qtyBox);
+      step.appendChild(btnPlus);
+
+      const btnEdit = document.createElement("button");
+      btnEdit.type = "button";
+      btnEdit.className = "secondary";
+      btnEdit.textContent = "編集";
+
+      right.appendChild(step);
+      right.appendChild(btnEdit);
+
+      card.appendChild(left);
+      card.appendChild(right);
+
+      btnEdit.onclick = () => {
+        const latest = itemsById.get(it.id);
+        if (latest) openModal(latest);
+      };
+      btnMinus.onclick = () => {
+        const latest = itemsById.get(it.id);
+        if (!latest) return;
+        const qty = Number.isFinite(latest.quantity) ? latest.quantity : 0;
+        adjustQty(it.id, qty, -1);
+      };
+      btnPlus.onclick = () => {
+        const latest = itemsById.get(it.id);
+        if (!latest) return;
+        const qty = Number.isFinite(latest.quantity) ? latest.quantity : 0;
+        adjustQty(it.id, qty, +1);
+      };
+
+      return card;
+    }
+
+    function patchItemElement(el, it) {
+      const diff = daysDiffFromToday(it.expiration_date);
+      const bucket = expiryBucket(diff);
+      const pillCls = pillClassByBucket(bucket);
+
+      el.classList.remove("exp-normal","exp-30days","exp-7days","exp-expired");
+      el.classList.add("exp-" + bucket);
+
+      el.querySelector(".name").textContent = it.name || "";
+
+      const loc = (it.note || "").trim() || "（未設定）";
+      const qty = Number.isFinite(it.quantity) ? it.quantity : 0;
+
+      const pLoc = el.querySelector('[data-role="loc"]');
+      const pExp = el.querySelector('[data-role="exp"]');
+      const pRemain = el.querySelector('[data-role="remain"]');
+      const pQty = el.querySelector('[data-role="qty"]');
+      const qtyBox = el.querySelector('[data-role="qtybox"]');
+
+      pLoc.textContent = `保存場所: ${loc}`;
+
+      pExp.className = "pill " + pillCls;
+      pExp.textContent = `賞味期限: ${it.expiration_date}`;
+
+      pRemain.textContent = diff < 0 ? `${Math.abs(diff)}日 期限切れ` : (diff === 0 ? "今日まで" : `あと${diff}日`);
+      pQty.textContent = `数量: ${qty}`;
+      qtyBox.textContent = String(qty);
+    }
+
+    function renderOptimized() {
       const listEl = $("list");
-      listEl.innerHTML = "";
 
       const list = getFilteredAndSorted();
       renderKpi(list);
       $("empty").style.display = list.length ? "none" : "block";
 
+      const visibleIds = new Set(list.map(it => it.id));
+
       for (const it of list) {
-        const diff = daysDiffFromToday(it.expiration_date);
-        const cls = badgeClass(diff);
-        const loc = normalizeLocationFromRow(it) || "（未設定）";
-
-        const card = document.createElement("div");
-        card.className = "item";
-
-        const left = document.createElement("div");
-        left.className = "left";
-
-        const name = document.createElement("div");
-        name.className = "name";
-        name.textContent = it.name;
-
-        const meta = document.createElement("div");
-        meta.className = "meta";
-
-        const pLoc = document.createElement("div");
-        pLoc.className = "pill";
-        pLoc.textContent = `保存場所: ${loc}`;
-
-        const p1 = document.createElement("div");
-        p1.className = `pill ${cls}`;
-        p1.textContent = `賞味期限: ${it.expiration_date}`;
-
-        const p2 = document.createElement("div");
-        p2.className = "pill";
-        if (diff < 0) p2.textContent = `${Math.abs(diff)}日 期限切れ`;
-        else if (diff === 0) p2.textContent = "今日まで";
-        else p2.textContent = `あと${diff}日`;
-
-        meta.appendChild(pLoc);
-        meta.appendChild(p1);
-        meta.appendChild(p2);
-
-        left.appendChild(name);
-        left.appendChild(meta);
-
-        const right = document.createElement("div");
-        right.className = "right";
-
-        // stepper
-        const step = document.createElement("div");
-        step.className = "stepper";
-
-        const btnMinus = document.createElement("button");
-        btnMinus.type = "button";
-        btnMinus.className = "secondary";
-        btnMinus.textContent = "－";
-        btnMinus.onclick = () => adjustQty(it.id, it.quantity, -1);
-
-        const qty = document.createElement("div");
-        qty.className = "qty";
-        qty.textContent = String(it.quantity);
-
-        const btnPlus = document.createElement("button");
-        btnPlus.type = "button";
-        btnPlus.className = "secondary";
-        btnPlus.textContent = "＋";
-        btnPlus.onclick = () => adjustQty(it.id, it.quantity, +1);
-
-        step.appendChild(btnMinus);
-        step.appendChild(qty);
-        step.appendChild(btnPlus);
-
-        const btnEdit = document.createElement("button");
-        btnEdit.type = "button";
-        btnEdit.className = "secondary";
-        btnEdit.textContent = "編集";
-        btnEdit.onclick = () => openModal(it);
-
-        right.appendChild(step);
-        right.appendChild(btnEdit);
-
-        card.appendChild(left);
-        card.appendChild(right);
-        listEl.appendChild(card);
+        let el = itemElById.get(it.id);
+        if (!el) {
+          el = buildItemElement(it);
+          itemElById.set(it.id, el);
+        }
+        patchItemElement(el, it);
       }
+
+      for (const [id, el] of itemElById.entries()) {
+        if (!visibleIds.has(id)) {
+          if (el.isConnected) {
+            try { el.remove(); } catch {}
+          }
+        }
+      }
+
+      const frag = document.createDocumentFragment();
+      for (const it of list) {
+        const el = itemElById.get(it.id);
+        if (el) frag.appendChild(el);
+      }
+      listEl.replaceChildren(frag);
     }
 
-    // ==========
-    // Events / Init
-    // ==========
-    $("btnSaveCfg").addEventListener("click", () => {
-      saveCfgToLS();
-      refreshSessionUI();
-    });
+    // ---- Master Modal ----
+    function openMaster() {
+      $("masterText").value = masterToText(productMaster);
+      $("masterHint").textContent = `現在 ${productMaster.length} 件`;
+      $("masterBackdrop").classList.add("show");
+      $("masterBackdrop").setAttribute("aria-hidden", "false");
+    }
+    function closeMaster() {
+      $("masterBackdrop").classList.remove("show");
+      $("masterBackdrop").setAttribute("aria-hidden", "true");
+    }
 
-    $("btnLogin").addEventListener("click", login);
-    $("btnLogout").addEventListener("click", logout);
-    $("btnAdd").addEventListener("click", addItem);
-
-    $("btnReload").addEventListener("click", () => reloadItems(true));
-    $("selSort").addEventListener("change", () => render()); // practiceはJSなので再描画でOK
-    $("inSearch").addEventListener("input", render);
-
-    $("password").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") login();
-    });
-
-    // modal interactions
-    $("modalBackdrop").addEventListener("click", (e) => {
-      if (e.target === $("modalBackdrop")) closeModal();
-    });
-    document.addEventListener("keydown", (e) => {
-      if (modalOpen && e.key === "Escape") closeModal();
-    });
-    $("mCancel").addEventListener("click", closeModal);
-
+    // ---- Edit Modal Save/Delete ----
     $("mSave").addEventListener("click", async () => {
       if (!editingId) return;
-
       const name = $("mName").value.trim();
-      const exp = $("mExp").value;
+      const expYMD = normalizeExpToYMD($("mExp").value);
       const qty = parseInt($("mQty").value, 10);
       const loc = $("mLoc").value.trim();
+      const yomi = $("mYomi").value.trim();
 
-      const msg = validateItem(name, exp, qty, loc);
-      if (msg) return toast(msg);
+      if (!name) return toast("商品名を入力してね");
+      if (!expYMD) return toast("賞味期限を8桁で入力してね（例: 20270203）");
+      if (!Number.isFinite(qty) || qty < 0) return toast("数量は0以上");
+      if (!loc || !LOCATIONS.includes(loc)) return toast("保存場所を選んでね");
+
+      if (qty === 0) return await deleteItemAuto(editingId);
 
       await updateItem(editingId, {
         name,
-        expiration_date: exp,
+        expiration_date: expYMD,
         quantity: qty,
-        note: loc
+        note: loc,
+        barcode: yomi ? yomi : null
       });
       closeModal();
     });
 
     $("mDelete").addEventListener("click", async () => {
       if (!editingId) return;
-      await deleteItem(editingId);
+      await deleteItemConfirm(editingId);
     });
 
-    // init defaults
+    // ---- Events ----
+    $("btnSaveCfg").addEventListener("click", () => { saveCfgToLS(); refreshSessionUI(); });
+    $("btnLogin").addEventListener("click", login);
+    $("btnLogout").addEventListener("click", logout);
+    $("btnAdd").addEventListener("click", addItem);
+    $("btnReload").addEventListener("click", () => reloadItems(true));
+    $("selSort").addEventListener("change", () => requestRender());
+    $("selProduct").addEventListener("change", (e) => applyMasterSelection(e.target.value));
+
+    $("modalBackdrop").addEventListener("click", (e) => { if (e.target === $("modalBackdrop")) closeModal(); });
+    document.addEventListener("keydown", (e) => { if (modalOpen && e.key === "Escape") closeModal(); });
+    $("mCancel").addEventListener("click", closeModal);
+
+    $("btnMaster").addEventListener("click", openMaster);
+    $("masterBackdrop").addEventListener("click", (e) => { if (e.target === $("masterBackdrop")) closeMaster(); });
+    $("masterClose").addEventListener("click", closeMaster);
+    $("masterSave").addEventListener("click", () => {
+      const text = $("masterText").value;
+      const parsed = parseMasterText(text);
+      if (parsed.length === 0 && text.trim() !== "") {
+        $("masterHint").textContent = "保存できる行がありません（形式と保存場所を確認してね）";
+        toast("マスター保存失敗");
+        return;
+      }
+      saveMaster(parsed);
+      $("masterHint").textContent = `保存しました（${parsed.length} 件）`;
+      toast("商品マスターを保存しました");
+      closeMaster();
+    });
+
+    $("password").addEventListener("keydown", (e) => { if (e.key === "Enter") login(); });
+
+    $("btnQtyUp").addEventListener("click", () => bumpInQty(+1));
+    $("btnQtyDown").addEventListener("click", () => bumpInQty(-1));
+
+    // ===== VerM: デバウンス適用（入力のたびに重い処理を走らせない） =====
+    const debouncedStockSearch = debounce(() => {
+      renderSuggestions();
+      requestRender();
+    }, 200); // 150〜250ms推奨。まずは200ms
+
+    const debouncedNameSuggest = debounce(() => {
+      renderNameSuggestions();
+    }, 160);
+
+    $("inSearch").addEventListener("input", () => debouncedStockSearch());
+    $("inSearch").addEventListener("focus", () => renderSuggestions()); // フォーカスは即候補
+    $("inSearch").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === "Escape") closeSuggestions();
+    });
+
+    $("inName").addEventListener("input", () => debouncedNameSuggest());
+    $("inName").addEventListener("focus", () => renderNameSuggestions()); // フォーカスは即候補
+    $("inName").addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeNameSuggestions();
+      if (e.key === "Enter") closeNameSuggestions();
+    });
+
+    document.addEventListener("click", (e) => {
+      const box1 = $("suggestBox");
+      const input1 = $("inSearch");
+      if (suggestOpen && e.target !== input1 && !box1.contains(e.target)) closeSuggestions();
+
+      const box2 = $("nameSuggestBox");
+      const input2 = $("inName");
+      if (nameSuggestOpen && e.target !== input2 && !box2.contains(e.target)) closeNameSuggestions();
+    });
+
+    // ---- Init ----
+    function closeSuggestions() { $("suggestBox").classList.remove("show"); suggestOpen = false; }
+    function closeNameSuggestions() { $("nameSuggestBox").classList.remove("show"); nameSuggestOpen = false; }
+
     $("inExp").value = formatDateYMD(new Date());
     $("selSort").value = "exp_practice";
 
     loadCfgFromLS();
     setLibStatus();
+    loadMaster();
     buildTabs();
+    applyTabToAddForm();
+    renderProductSelect();
+
+    attachExpFormatter($("inExp"));
+    attachExpFormatter($("mExp"));
+
+    syncInQtyUI();
 
     (async () => {
-      if (($("sbUrl").value || "").trim() && ($("sbKey").value || "").trim()) {
-        ensureSupabase();
-      }
-      try {
-        await refreshSessionUI();
-      } catch (e) {
-        console.error(e);
-        toast(`初期化失敗: ${e.message || e}`);
-      }
+      if (($("sbUrl").value || "").trim() && ($("sbKey").value || "").trim()) ensureSupabase();
+      try { await refreshSessionUI(); }
+      catch (e) { console.error(e); toast(`初期化失敗: ${e.message || e}`); }
 
       const sb = ensureSupabase();
-      if (sb) {
-        sb.auth.onAuthStateChange(async () => {
-          await refreshSessionUI();
-        });
-      }
+      if (sb) sb.auth.onAuthStateChange(async () => { await refreshSessionUI(); });
     })();
   </script>
 </body>
