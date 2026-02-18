@@ -15,7 +15,7 @@
     .row > * { flex: 1 1 160px; }
     label { display:block; font-size:12px; color:#555; margin:0 0 4px; }
     input, button, select, textarea { width:100%; box-sizing:border-box; padding:10px; border:1px solid #d9d9d9; border-radius:10px; font-size:15px; background:white; }
-    textarea { min-height: 220px; resize: vertical; }
+    textarea { min-height: 240px; resize: vertical; }
     button { cursor:pointer; border:1px solid #cfcfcf; background:#111; color:white; }
     button.secondary { background:#fff; color:#111; }
     button.danger { background:#b00020; border-color:#b00020; }
@@ -51,7 +51,7 @@
     .pill.bad    { background:#ffe3e3; border-color:#ff9c9c; }
     .pill.good   { background:#e6fcf5; border-color:#b2f2e5; }
 
-    .toast { position: fixed; left:50%; transform:translateX(-50%); bottom: 18px; background:#111; color:#fff; padding:10px 12px; border-radius: 999px; font-size: 13px; opacity:0; pointer-events:none; transition:opacity .15s ease; max-width: 92vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .toast { position: fixed; left:50%; transform:translateX(-50%); bottom: 18px; background:#111; color:#fff; padding:10px 12px; border-radius: 999px; font-size: 13px; opacity:0; pointer-events:none; transition:opacity .15s ease; max-width: 92vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 99999; }
     .toast.show { opacity: 1; }
     .topbar { display:flex; justify-content:space-between; align-items:center; gap:10px; }
     .topbar .who { font-size:12px; color:#666; word-break:break-all; }
@@ -76,26 +76,14 @@
       font-size:13px;
       cursor:pointer;
       user-select:none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     .tab.active { background:#111; color:#fff; border-color:#111; }
 
     .stepper { display:flex; align-items:center; gap:6px; }
-    .stepper button {
-      width:auto;
-      padding:8px 10px;
-      border-radius:12px;
-      background:#fff;
-      color:#111;
-    }
-    .stepper .qty {
-      min-width: 54px;
-      text-align:center;
-      padding:8px 10px;
-      border:1px solid #ddd;
-      border-radius:12px;
-      background:#fafafa;
-      font-weight:900;
-    }
+    .stepper button { width:auto; padding:8px 10px; border-radius:12px; background:#fff; color:#111; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .stepper .qty { min-width: 54px; text-align:center; padding:8px 10px; border:1px solid #ddd; border-radius:12px; background:#fafafa; font-weight:900; }
 
     /* 登録用 数量ステッパー（上下矢印・押しやすい） */
     .qtyStepper { display:flex; align-items:stretch; gap:10px; }
@@ -138,7 +126,7 @@
     }
     .modalBackdrop.show { display:flex; }
     .modal {
-      width: min(820px, 100%);
+      width: min(920px, 100%);
       background:#fff;
       border-radius: 16px;
       border: 1px solid #e7e7e7;
@@ -161,6 +149,8 @@
       width: 100%; text-align: left; border: 0; background: #fff; color: #111;
       padding: 10px 10px; border-radius: 12px; cursor: pointer; font-size: 14px;
       display: flex; gap: 8px; align-items: center; justify-content: space-between;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     .suggestItem:hover { background: #f4f5f7; }
     .suggestName { font-weight: 900; }
@@ -168,6 +158,9 @@
     .suggestRight { font-size: 12px; color: #444; white-space: nowrap; }
     .hintTiny { font-size: 11px; color: #777; margin-top: 4px; }
     code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    .seg { display:flex; gap:8px; flex-wrap:wrap; margin-top: 8px; }
+    .seg button { width:auto; padding:8px 10px; border-radius:999px; }
 
     @media (max-width:480px){
       header h1 { font-size:16px; }
@@ -181,7 +174,7 @@
     <div class="topbar">
       <h1>賞味期限管理（ボトルビール）</h1>
       <div class="topActions">
-        <button id="btnMaster" class="secondary hidden" type="button">商品マスター</button>
+        <button id="btnSettings" class="secondary hidden" type="button">設定</button>
         <button id="btnLogout" class="secondary hidden" type="button">ログアウト</button>
       </div>
     </div>
@@ -232,8 +225,8 @@
           </div>
         </div>
         <div class="help">
-          同一店舗運用で「全タブレット同一アカウント」想定。<br/>
-          ※ユーザー未作成だとログインできません（Supabase Auth → Users で作成）。
+          <b>店舗流用の考え方：</b>別店舗は <b>別アカウント</b> で運用（データ混ざらない）。同一店舗は同アカウントで複数iPad同期。<br/>
+          ※ユーザー未作成だとログインできません（Supabase Auth → Users）。
         </div>
       </div>
     </section>
@@ -243,22 +236,23 @@
         <div class="stack">
           <div class="muted">保存場所で絞り込み（タブ選択で追加フォーム保存場所も自動セット）</div>
           <div id="tabs" class="tabs"></div>
+          <div class="hintTiny" id="locHint"></div>
         </div>
 
         <div class="row" style="align-items:flex-end;">
-          <div style="flex: 2 1 280px;">
-            <label>商品（プルダウン）</label>
+          <div style="flex: 2 1 300px;">
+            <label>商品（プルダウン：保存場所に連動）</label>
             <select id="selProduct">
               <option value="">（手入力）</option>
             </select>
-            <div id="selProductHint" class="hintTiny">※プルダウンでも選べます</div>
+            <div id="selProductHint" class="hintTiny">※プルダウンは保存場所に連動</div>
           </div>
 
           <div class="suggestWrap" style="flex: 2 1 260px;">
             <label>商品名（必須・手入力でマスター候補）</label>
             <input id="inName" placeholder="例）台湾ビール" autocomplete="off" />
             <div id="nameSuggestBox" class="suggestBox"></div>
-            <div class="hintTiny">例：マスターに「台湾ビール | たいわんびーる | チェコ」登録 → 商品名欄で「た」→候補表示</div>
+            <div class="hintTiny">例：マスターに「台湾ビール | たいわんびーる | （保存場所名）」登録 → 商品名欄で「た」→候補表示</div>
           </div>
 
           <div>
@@ -267,7 +261,7 @@
               id="inExp"
               type="tel"
               inputmode="numeric"
-              pattern="[0-9\-]*"
+              pattern="[0-9\\-]*"
               maxlength="10"
               placeholder="例）20270203（8桁）"
               autocomplete="off"
@@ -291,22 +285,17 @@
             <div class="hintTiny">▲▼で増減</div>
           </div>
 
-          <div style="flex: 2 1 220px;">
+          <div style="flex: 2 1 240px;">
             <label>保存場所（必須）</label>
             <select id="inLoc">
-              <option value="">選択してね</option>
-              <option value="ビアタップチャンバー">ビアタップチャンバー</option>
-              <option value="イギリス">イギリス</option>
-              <option value="チェコ">チェコ</option>
-              <option value="ベルギー">ベルギー</option>
-              <option value="チャンバー">チャンバー</option>
+              <option value="">読み込み中…</option>
             </select>
           </div>
 
           <div style="flex: 2 1 240px;">
             <label>よみ（かな・任意）</label>
             <input id="inYomi" placeholder="例）たいわんびーる" />
-            <div class="hintTiny">※かな検索候補用（DBの <code>barcode</code> に保存）</div>
+            <div class="hintTiny">※かな検索候補用（DBの <code>yomi</code> に保存）</div>
           </div>
 
           <div style="flex:0 0 140px;">
@@ -352,14 +341,15 @@
         <div id="empty" class="muted" style="margin-top:8px;">データがありません。</div>
 
         <div class="help">
-          <b>VerN改善：</b>登録フォームの賞味期限は <b>空欄スタート</b>（毎回消さなくてOK）。8桁入力→自動整形。<br/>
-          <b>VerM最適化：</b>検索入力（在庫検索・商品名候補）をデバウンスして、入力中の処理負荷を下げています。<br/>
+          <b>保存場所：</b>Supabaseの <code>locations</code> で管理（同一アカウントで全端末同期）。<br/>
+          <b>商品マスター：</b>Supabaseの <code>products</code> で管理（同一アカウントで全端末同期）。<br/>
           <b>在庫0：</b>編集や＋/－で在庫を0にすると <b>自動削除</b>されます（追加時は0禁止）。
         </div>
       </div>
     </section>
   </main>
 
+  <!-- 編集モーダル -->
   <div id="modalBackdrop" class="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal">
       <h3>編集</h3>
@@ -374,7 +364,7 @@
             id="mExp"
             type="tel"
             inputmode="numeric"
-            pattern="[0-9\-]*"
+            pattern="[0-9\\-]*"
             maxlength="10"
             placeholder="例）20270203（8桁）"
             autocomplete="off"
@@ -385,23 +375,17 @@
           <label>数量（0にすると自動削除）</label>
           <input id="mQty" type="number" min="0" step="1" inputmode="numeric" />
         </div>
-        <div style="flex: 2 1 220px;">
+        <div style="flex: 2 1 240px;">
           <label>保存場所（必須）</label>
           <select id="mLoc">
-            <option value="">選択してね</option>
-            <option value="ビアタップチャンバー">ビアタップチャンバー</option>
-            <option value="イギリス">イギリス</option>
-            <option value="チェコ">チェコ</option>
-            <option value="ベルギー">ベルギー</option>
-            <option value="チャンバー">チャンバー</option>
+            <option value="">読み込み中…</option>
           </select>
         </div>
       </div>
       <div class="row" style="align-items:flex-end;">
         <div style="flex: 2 1 240px;">
           <label>よみ（かな・任意）</label>
-          <input id="mYomi" placeholder="例）ぎねす" />
-          <div class="hintTiny">※かな検索候補用（DBの <code>barcode</code> に保存）</div>
+          <input id="mYomi" placeholder="例）たいわんびーる" />
         </div>
       </div>
       <div class="actions">
@@ -413,22 +397,54 @@
     </div>
   </div>
 
-  <div id="masterBackdrop" class="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <!-- 設定モーダル（保存場所/商品マスター） -->
+  <div id="settingsBackdrop" class="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal">
-      <h3>商品マスター（端末ローカル）</h3>
-      <div class="help">
-        1行に1商品。形式：<code>商品名 | よみ(任意) | 保存場所</code><br/>
-        例：<code>台湾ビール | たいわんびーる | チェコ</code><br/>
-        保存場所はこの5つのみ：<b>ビアタップチャンバー / イギリス / チェコ / ベルギー / チャンバー</b>
+      <h3>設定（同一アカウントで全端末同期）</h3>
+
+      <div class="seg">
+        <button id="segLoc" type="button" class="secondary">保存場所</button>
+        <button id="segProd" type="button" class="secondary">商品マスター</button>
       </div>
-      <textarea id="masterText" spellcheck="false" placeholder="例）
-台湾ビール | たいわんびーる | チェコ
-ギネス | ぎねす | イギリス"></textarea>
-      <div class="actions">
-        <button id="masterClose" type="button" class="secondary">閉じる</button>
-        <button id="masterSave" type="button">保存</button>
+
+      <div id="panelLoc" class="stack" style="margin-top:10px;">
+        <div class="help">
+          <b>保存場所（locations）：</b>1行に1つ。上から順にタブが並びます。<br/>
+          例：<code>冷蔵庫</code> / <code>倉庫</code> / <code>バックヤード</code>
+        </div>
+        <textarea id="locText" spellcheck="false" placeholder="例）
+冷蔵庫
+倉庫
+バックヤード"></textarea>
+        <div class="actions">
+          <button id="locReload" type="button" class="secondary">再読込</button>
+          <button id="locSave" type="button">保存</button>
+        </div>
+        <div class="muted" id="locStatus"></div>
       </div>
-      <div class="muted" id="masterHint" style="margin-top:8px;"></div>
+
+      <div id="panelProd" class="stack hidden" style="margin-top:10px;">
+        <div class="help">
+          <b>商品マスター（products）：</b>1行に1商品。形式：<code>商品名 | よみ(任意) | 保存場所名</code><br/>
+          例：<code>台湾ビール | たいわんびーる | 冷蔵庫</code>
+        </div>
+        <textarea id="prodText" spellcheck="false" placeholder="例）
+台湾ビール | たいわんびーる | 冷蔵庫
+ギネス | ぎねす | 倉庫"></textarea>
+        <div class="actions">
+          <button id="prodReload" type="button" class="secondary">再読込</button>
+          <button id="prodSave" type="button">保存</button>
+        </div>
+        <div class="muted" id="prodStatus"></div>
+      </div>
+
+      <div class="actions" style="margin-top:12px;">
+        <button id="settingsClose" type="button" class="secondary">閉じる</button>
+      </div>
+
+      <div class="help" style="margin-top:10px;">
+        <b>注意：</b>「保存場所」を変更した場合、既存在庫の保存場所（location_id）は自動では移行しません。必要なら新しい保存場所に合わせて在庫を編集してください。
+      </div>
     </div>
   </div>
 
@@ -439,20 +455,29 @@
   <script>
     const LS_URL_KEY = "sb_url";
     const LS_ANON_KEY = "sb_anon";
-    const LS_MASTER_KEY = "product_master_v1";
     const $ = (id) => document.getElementById(id);
 
-    const LOCATIONS = ["ビアタップチャンバー","イギリス","チェコ","ベルギー","チャンバー"];
     const TAB_ALL = "__ALL__";
 
     let supabaseClient = null;
     let realtimeChannel = null;
 
-    // データとDOMの差分管理
-    let itemsCache = [];
+    // Supabase同期データ
+    let locations = [];     // {id, name, sort_order}
+    let products = [];      // {id, name, yomi, location_id, location_name}
+    let itemsCache = [];    // {id, name, yomi, expiration_date, quantity, location_id, created_at}
+
+    // 参照用
+    let locById = new Map();
+    let locIdByName = new Map();
+    let productsByLocId = new Map();
+
+    let activeLocId = TAB_ALL; // location_id or TAB_ALL
+
+    // DOM差分
     let itemsById = new Map();
     let itemElById = new Map();
-    let activeLoc = TAB_ALL;
+    let renderScheduled = false;
 
     let modalOpen = false;
     let editingId = null;
@@ -460,12 +485,6 @@
     let suggestOpen = false;
     let nameSuggestOpen = false;
 
-    let productMaster = [];
-
-    // Realtimeの連発をまとめる
-    let renderScheduled = false;
-
-    // デバウンス
     function debounce(fn, waitMs) {
       let t = null;
       return (...args) => {
@@ -481,6 +500,15 @@
       setTimeout(() => el.classList.remove("show"), 2200);
     }
 
+    // ★ 追加：トップへ戻す（ログアウト後）
+    function goTop() {
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      } catch {
+        window.scrollTo(0, 0);
+      }
+    }
+
     window.addEventListener("error", (e) => { toast(`JSエラー: ${e.message}`); console.error(e.error || e); });
     window.addEventListener("unhandledrejection", (e) => { toast(`Promiseエラー: ${e.reason?.message || e.reason}`); console.error(e.reason); });
 
@@ -491,13 +519,39 @@
         : "ライブラリ状態: NG（supabase-js 読み込み失敗）→ ネットワーク/拡張機能/URLを確認";
     }
 
-    function formatDateYMD(d) {
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      return `${yyyy}-${mm}-${dd}`;
+    function ensureSupabase() {
+      setLibStatus();
+      if (!(window.supabase && typeof window.supabase.createClient === "function")) {
+        toast("supabase-js が読み込めてません（libStatusを確認）");
+        return null;
+      }
+      const url = $("sbUrl").value.trim();
+      const key = $("sbKey").value.trim();
+      if (!url || !key) { toast("Supabase URL / 公開キーを設定してね"); return null; }
+      if (!supabaseClient) supabaseClient = window.supabase.createClient(url, key);
+      return supabaseClient;
     }
 
+    function loadCfgFromLS() {
+      $("sbUrl").value = localStorage.getItem(LS_URL_KEY) || "";
+      $("sbKey").value = localStorage.getItem(LS_ANON_KEY) || "";
+    }
+    function saveCfgToLS() {
+      localStorage.setItem(LS_URL_KEY, $("sbUrl").value.trim());
+      localStorage.setItem(LS_ANON_KEY, $("sbKey").value.trim());
+      toast("設定を保存しました");
+      supabaseClient = null;
+    }
+
+    // 文字正規化（検索用）
+    function toHiraganaLike(s) {
+      return (s || "").replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+    }
+    function normKey(s) {
+      return toHiraganaLike((s || "").trim().toLowerCase());
+    }
+
+    // 日付
     function daysDiffFromToday(dateStr) {
       const today = new Date();
       const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -506,7 +560,6 @@
       const ms = d.getTime() - t0.getTime();
       return Math.round(ms / (1000 * 60 * 60 * 24));
     }
-
     function expiryBucket(diff) {
       if (diff < 0) return "expired";
       if (diff <= 7) return "7days";
@@ -520,14 +573,7 @@
       return "good";
     }
 
-    function toHiraganaLike(s) {
-      return (s || "").replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
-    }
-    function normKey(s) {
-      return toHiraganaLike((s || "").trim().toLowerCase());
-    }
-
-    // ---- 8桁→YYYY-MM-DD 自動整形 ----
+    // 8桁→YYYY-MM-DD
     function onlyDigits(s) { return (s || "").replace(/[^\d]/g, ""); }
     function formatExpDisplay(raw) {
       const d = onlyDigits(raw).slice(0, 8);
@@ -559,142 +605,215 @@
       });
     }
 
-    function ensureSupabase() {
-      setLibStatus();
-      if (!(window.supabase && typeof window.supabase.createClient === "function")) {
-        toast("supabase-js が読み込めてません（libStatusを確認）");
-        return null;
-      }
-      const url = $("sbUrl").value.trim();
-      const key = $("sbKey").value.trim();
-      if (!url || !key) { toast("Supabase URL / 公開キーを設定してね"); return null; }
-      if (!supabaseClient) supabaseClient = window.supabase.createClient(url, key);
-      return supabaseClient;
+    // 数量ステッパー（登録）
+    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+    function syncInQtyUI() {
+      const v = parseInt($("inQty").value, 10);
+      const qty = Number.isFinite(v) ? v : 1;
+      $("inQty").value = String(clamp(qty, 1, 9999));
+      $("inQtyDisplay").textContent = $("inQty").value;
+    }
+    function setInQty(n) {
+      $("inQty").value = String(clamp(parseInt(n,10) || 1, 1, 9999));
+      syncInQtyUI();
+    }
+    function bumpInQty(delta) {
+      const cur = parseInt($("inQty").value, 10) || 1;
+      setInQty(cur + delta);
     }
 
-    function loadCfgFromLS() {
-      $("sbUrl").value = localStorage.getItem(LS_URL_KEY) || "";
-      $("sbKey").value = localStorage.getItem(LS_ANON_KEY) || "";
-    }
+    // ===== Supabase読み込み（locations/products/items） =====
+    async function fetchLocations() {
+      const sb = ensureSupabase(); if (!sb) return;
+      const { data, error } = await sb
+        .from("locations")
+        .select("id,name,sort_order")
+        .order("sort_order", { ascending: true })
+        .order("name", { ascending: true });
+      if (error) throw error;
 
-    function saveCfgToLS() {
-      localStorage.setItem(LS_URL_KEY, $("sbUrl").value.trim());
-      localStorage.setItem(LS_ANON_KEY, $("sbKey").value.trim());
-      toast("設定を保存しました");
-      supabaseClient = null;
-    }
+      locations = data || [];
+      locById = new Map(locations.map(l => [l.id, l]));
+      locIdByName = new Map(locations.map(l => [l.name, l.id]));
 
-    // ---- 商品マスター ----
-    function parseMasterText(text) {
-      const lines = (text || "").split(/\r?\n/);
-      const out = [];
-      for (const raw of lines) {
-        const line = raw.trim();
-        if (!line) continue;
-        let parts = line.split("|").map(s => s.trim());
-        if (parts.length === 1) parts = line.split(",").map(s => s.trim());
-        if (parts.length === 1) parts = line.split("\t").map(s => s.trim());
-        const name = (parts[0] || "").trim();
-        const yomi = (parts[1] || "").trim();
-        const loc = (parts[2] || "").trim();
-        if (!name) continue;
-        if (!LOCATIONS.includes(loc)) continue;
-        out.push({ name, yomi, loc });
-      }
-      out.sort((a,b) => a.loc.localeCompare(b.loc,"ja") || a.name.localeCompare(b.name,"ja"));
-      return out;
-    }
-
-    function masterToText(master) {
-      return (master || []).map(m => `${m.name} | ${m.yomi || ""} | ${m.loc}`).join("\n");
-    }
-
-    function loadMaster() {
-      try {
-        const raw = localStorage.getItem(LS_MASTER_KEY);
-        productMaster = raw ? (JSON.parse(raw) || []) : [];
-      } catch { productMaster = []; }
-      productMaster = (productMaster || []).filter(m => m && m.name && LOCATIONS.includes(m.loc));
-      renderProductSelect();
-    }
-
-    function saveMaster(master) {
-      productMaster = master;
-      localStorage.setItem(LS_MASTER_KEY, JSON.stringify(productMaster));
-      renderProductSelect();
-    }
-
-    function getMasterForCurrentLoc() {
-      if (activeLoc === TAB_ALL) return productMaster;
-      return productMaster.filter(m => m.loc === activeLoc);
-    }
-
-    function renderProductSelect() {
-      const sel = $("selProduct");
-      const current = sel.value;
-      const masters = getMasterForCurrentLoc();
-
-      sel.innerHTML = `<option value="">（手入力）</option>`;
-      for (let i=0; i<masters.length; i++) {
-        const m = masters[i];
-        const opt = document.createElement("option");
-        opt.value = String(i);
-        opt.textContent = `${m.name}（${m.loc}）`;
-        sel.appendChild(opt);
-      }
-
-      if (activeLoc === TAB_ALL) $("selProductHint").textContent = "※プルダウンでも選べます（全マスター）";
-      else $("selProductHint").textContent = `※プルダウンは「${activeLoc}」のマスターのみ表示`;
-
-      if (current !== "" && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
-      else sel.value = "";
-    }
-
-    function applyMasterItem(m) {
-      $("inName").value = m.name || "";
-      $("inYomi").value = m.yomi || "";
-      $("inLoc").value = m.loc || "";
-      activeLoc = m.loc;
+      // UI
       buildTabs();
+      renderLocationSelects();
+      renderLocationHints();
+    }
+
+    async function fetchProducts() {
+      const sb = ensureSupabase(); if (!sb) return;
+      const { data, error } = await sb
+        .from("products")
+        .select("id,name,yomi,location_id,locations(name,sort_order)")
+        .order("name", { ascending: true });
+      if (error) throw error;
+
+      products = (data || []).map(p => ({
+        id: p.id,
+        name: p.name,
+        yomi: p.yomi || "",
+        location_id: p.location_id,
+        location_name: (p.locations && p.locations.name) ? p.locations.name : (locById.get(p.location_id)?.name || "")
+      }));
+
+      rebuildProductsByLoc();
       renderProductSelect();
+    }
+
+    function rebuildProductsByLoc() {
+      productsByLocId = new Map();
+      for (const p of products) {
+        const arr = productsByLocId.get(p.location_id) || [];
+        arr.push(p);
+        productsByLocId.set(p.location_id, arr);
+      }
+      for (const [k, arr] of productsByLocId.entries()) {
+        arr.sort((a,b) => (a.name || "").localeCompare((b.name || ""), "ja"));
+      }
+    }
+
+    async function fetchItems(showToast=true) {
+      const sb = ensureSupabase(); if (!sb) return;
+
+      let q = sb.from("items").select("id,name,yomi,expiration_date,quantity,location_id,created_at");
+
+      if (activeLocId !== TAB_ALL) {
+        q = q.eq("location_id", activeLocId);
+      }
+
+      const { data, error } = await q;
+      if (error) throw error;
+
+      itemsCache = data || [];
+
+      itemsById.clear();
+      for (const it of itemsCache) itemsById.set(it.id, it);
+
+      for (const [id, el] of itemElById.entries()) {
+        try { el.remove(); } catch {}
+      }
+      itemElById.clear();
+
       requestRender();
-    }
-
-    function applyMasterSelection(indexStr) {
-      if (!indexStr) return;
-      const masters = getMasterForCurrentLoc();
-      const idx = parseInt(indexStr, 10);
-      if (!Number.isFinite(idx) || idx < 0 || idx >= masters.length) return;
-      applyMasterItem(masters[idx]);
-    }
-
-    // ---- Tabs ----
-    function applyTabToAddForm() {
-      if (activeLoc !== TAB_ALL) $("inLoc").value = activeLoc;
+      if (showToast) toast("読み込みました");
     }
 
     function buildTabs() {
       const wrap = $("tabs");
       wrap.innerHTML = "";
+
       const makeTab = (label, value) => {
         const b = document.createElement("button");
         b.type = "button";
-        b.className = "tab" + (activeLoc === value ? " active" : "");
+        b.className = "tab" + (activeLocId === value ? " active" : "");
         b.textContent = label;
-        b.onclick = () => {
-          activeLoc = value;
+        b.onclick = async () => {
+          activeLocId = value;
           buildTabs();
           applyTabToAddForm();
           renderProductSelect();
-          requestRender();
+          await fetchItems(false);
         };
         return b;
       };
+
       wrap.appendChild(makeTab("全件", TAB_ALL));
-      for (const loc of LOCATIONS) wrap.appendChild(makeTab(loc, loc));
+      for (const loc of locations) {
+        wrap.appendChild(makeTab(loc.name, loc.id));
+      }
     }
 
-    // ---- Auth ----
+    function renderLocationHints() {
+      if (activeLocId === TAB_ALL) {
+        $("locHint").textContent = "全件表示中（保存場所のタブを押すと、その場所だけに絞れます）";
+      } else {
+        const name = locById.get(activeLocId)?.name || "";
+        $("locHint").textContent = `保存場所「${name}」で絞り込み中`;
+      }
+    }
+
+    function renderLocationSelects() {
+      const setOptions = (sel, keepValue) => {
+        const current = keepValue ? sel.value : "";
+        sel.innerHTML = `<option value="">選択してね</option>`;
+        for (const loc of locations) {
+          const opt = document.createElement("option");
+          opt.value = loc.id;
+          opt.textContent = loc.name;
+          sel.appendChild(opt);
+        }
+        if (keepValue && current && sel.querySelector(`option[value="${CSS.escape(current)}"]`)) {
+          sel.value = current;
+        }
+      };
+
+      setOptions($("inLoc"), true);
+      setOptions($("mLoc"), true);
+
+      if (locations.length === 0) {
+        $("inLoc").innerHTML = `<option value="">（設定 → 保存場所を登録してね）</option>`;
+        $("mLoc").innerHTML = `<option value="">（設定 → 保存場所を登録してね）</option>`;
+      }
+    }
+
+    function applyTabToAddForm() {
+      if (activeLocId !== TAB_ALL) $("inLoc").value = activeLocId;
+      renderLocationHints();
+    }
+
+    function getProductsForCurrentLoc() {
+      if (activeLocId === TAB_ALL) return products;
+      return productsByLocId.get(activeLocId) || [];
+    }
+
+    function renderProductSelect() {
+      const sel = $("selProduct");
+      const current = sel.value;
+      const list = getProductsForCurrentLoc();
+
+      sel.innerHTML = `<option value="">（手入力）</option>`;
+      for (let i=0; i<list.length; i++) {
+        const p = list[i];
+        const opt = document.createElement("option");
+        opt.value = String(i);
+        opt.textContent = `${p.name}`;
+        sel.appendChild(opt);
+      }
+
+      if (activeLocId === TAB_ALL) $("selProductHint").textContent = "※プルダウンは全マスター表示";
+      else {
+        const ln = locById.get(activeLocId)?.name || "";
+        $("selProductHint").textContent = `※プルダウンは「${ln}」のマスターのみ表示`;
+      }
+
+      if (current !== "" && sel.querySelector(`option[value="${CSS.escape(current)}"]`)) sel.value = current;
+      else sel.value = "";
+    }
+
+    function applyProductSelection(indexStr) {
+      if (!indexStr) return;
+      const list = getProductsForCurrentLoc();
+      const idx = parseInt(indexStr, 10);
+      if (!Number.isFinite(idx) || idx < 0 || idx >= list.length) return;
+      const p = list[idx];
+
+      $("inName").value = p.name || "";
+      $("inYomi").value = p.yomi || "";
+      $("inLoc").value = p.location_id || "";
+
+      activeLocId = p.location_id;
+      buildTabs();
+      applyTabToAddForm();
+      renderProductSelect();
+
+      closeNameSuggestions();
+      requestRender();
+      $("inExp").focus();
+    }
+
+    // ===== Auth =====
     async function refreshSessionUI() {
       const sb = ensureSupabase();
       if (!sb) return;
@@ -705,25 +824,34 @@
       $("authCard").classList.toggle("hidden", loggedIn);
       $("appCard").classList.toggle("hidden", !loggedIn);
       $("btnLogout").classList.toggle("hidden", !loggedIn);
-      $("btnMaster").classList.toggle("hidden", !loggedIn);
+      $("btnSettings").classList.toggle("hidden", !loggedIn);
       $("cfgCard").classList.toggle("hidden", loggedIn);
 
       $("who").textContent = loggedIn ? `ログイン中: ${session.user.email}` : "";
 
       if (loggedIn) {
-        loadMaster();
+        await fetchLocations();
+        activeLocId = TAB_ALL;
         buildTabs();
         applyTabToAddForm();
-        renderProductSelect();
-        syncInQtyUI();
+
+        await fetchProducts();
         await startRealtime();
-        await reloadItems(true);
+        await fetchItems(false);
       } else {
+        // ★ 追加：ログアウト状態になったらモーダルも閉じてトップへ
+        try { closeModal(); } catch {}
+        try { closeSettings(); } catch {}
+
         await stopRealtime();
+        locations = [];
+        products = [];
         itemsCache = [];
         itemsById.clear();
         itemElById.clear();
         requestRender();
+
+        goTop(); // ★ トップへ
       }
     }
 
@@ -753,35 +881,51 @@
     async function logout() {
       const sb = ensureSupabase();
       if (!sb) return;
-      await sb.auth.signOut();
-      toast("ログアウトしました");
-      await refreshSessionUI();
+
+      const btn = $("btnLogout");
+      btn.disabled = true;
+      toast("ログアウト中…");
+
+      try {
+        const { error } = await sb.auth.signOut();
+        if (error) throw error;
+      } catch (e) {
+        console.error(e);
+        toast(`ログアウト失敗: ${e.message || e}`);
+      } finally {
+        btn.disabled = false;
+        await refreshSessionUI();
+
+        // ★ 追加：確実にトップへ戻す（UI切替後に実行）
+        goTop();
+
+        toast("ログアウトしました");
+      }
     }
 
-    // ---- Realtime 差分更新 ----
+    // ===== Realtime =====
     async function startRealtime() {
       const sb = ensureSupabase();
       if (!sb) return;
       if (realtimeChannel) return;
 
       realtimeChannel = sb
-        .channel("rt-items")
-        .on("postgres_changes", { event: "*", schema: "public", table: "items" }, (payload) => {
-          try {
-            if (payload.eventType === "INSERT") {
-              upsertItemRow(payload.new);
-              requestRender();
-            } else if (payload.eventType === "UPDATE") {
-              upsertItemRow(payload.new);
-              requestRender();
-            } else if (payload.eventType === "DELETE") {
-              const id = (payload.old || {}).id;
-              if (id != null) removeItemById(id);
-              requestRender();
-            } else {
-              reloadItems(false);
-            }
-          } catch (e) { console.error(e); }
+        .channel("rt-all")
+        .on("postgres_changes", { event: "*", schema: "public", table: "locations" }, async () => {
+          await fetchLocations();
+          await fetchProducts();
+          if (activeLocId !== TAB_ALL && !locById.has(activeLocId)) activeLocId = TAB_ALL;
+          buildTabs();
+          applyTabToAddForm();
+          renderProductSelect();
+          await fetchItems(false);
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "products" }, async () => {
+          await fetchProducts();
+          renderProductSelect();
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "items" }, async () => {
+          await fetchItems(false);
         })
         .subscribe();
     }
@@ -795,134 +939,13 @@
       }
     }
 
-    // ---- DB取得 ----
-    async function reloadItems(showToast = true) {
-      const sb = ensureSupabase();
-      if (!sb) return;
-
-      $("btnReload").disabled = true;
-      try {
-        const { data, error } = await sb
-          .from("items")
-          .select("id,name,expiration_date,quantity,note,barcode,created_at");
-        if (error) throw error;
-
-        itemsCache = data || [];
-        rebuildIndexFromCache();
-        requestRender();
-
-        if (showToast) toast("読み込みました");
-      } catch (e) {
-        console.error(e);
-        toast(`読込失敗: ${e.message || e}`);
-      } finally {
-        $("btnReload").disabled = false;
-      }
-    }
-
-    function rebuildIndexFromCache() {
-      itemsById.clear();
-      for (const it of itemsCache) itemsById.set(it.id, it);
-      for (const [id, el] of itemElById.entries()) {
-        if (!itemsById.has(id)) {
-          try { el.remove(); } catch {}
-          itemElById.delete(id);
-        }
-      }
-    }
-
-    function upsertItemRow(row) {
-      if (!row || row.id == null) return;
-      const id = row.id;
-
-      const existed = itemsById.has(id);
-      itemsById.set(id, row);
-
-      if (existed) {
-        const idx = itemsCache.findIndex(x => x.id === id);
-        if (idx >= 0) itemsCache[idx] = row;
-        else itemsCache.push(row);
-      } else {
-        itemsCache.push(row);
-      }
-    }
-
-    function removeItemById(id) {
-      itemsById.delete(id);
-      itemsCache = itemsCache.filter(x => x.id !== id);
-
-      const el = itemElById.get(id);
-      if (el) {
-        try { el.remove(); } catch {}
-        itemElById.delete(id);
-      }
-    }
-
-    // ---- CRUD ----
-    function getSortSpec() {
-      const v = $("selSort").value;
-      if (v === "exp_asc") return { kind: "exp", asc: true };
-      if (v === "exp_desc") return { kind: "exp", asc: false };
-      if (v === "created_asc") return { kind: "created", asc: true };
-      if (v === "created_desc") return { kind: "created", asc: false };
-      if (v === "name_asc") return { kind: "name", asc: true };
-      if (v === "name_desc") return { kind: "name", asc: false };
-      return { kind: "practice" };
-    }
-
-    function getFilteredAndSorted() {
-      const q = normKey($("inSearch").value);
-      let list = itemsCache;
-
-      if (activeLoc !== TAB_ALL) list = list.filter(it => ((it.note || "").trim() === activeLoc));
-
-      if (q) {
-        list = list.filter(it => {
-          const nk = normKey(it.name || "");
-          const yk = normKey((it.barcode || "").trim());
-          if (q.length <= 2) return nk.startsWith(q) || (yk && yk.startsWith(q));
-          return nk.includes(q) || (yk && yk.includes(q));
-        });
-      }
-
-      const sort = getSortSpec();
-      if (sort.kind === "practice") {
-        return [...list].sort((a,b) => {
-          const da = daysDiffFromToday(a.expiration_date);
-          const db = daysDiffFromToday(b.expiration_date);
-          if (da !== db) return da - db;
-          const la = ((a.note || "").trim()).localeCompare(((b.note || "").trim()), "ja");
-          if (la !== 0) return la;
-          return (a.name || "").localeCompare((b.name || ""), "ja");
-        });
-      }
-
-      return [...list].sort((a,b) => {
-        if (sort.kind === "exp") {
-          const aa = a.expiration_date || "";
-          const bb = b.expiration_date || "";
-          return sort.asc ? aa.localeCompare(bb) : bb.localeCompare(aa);
-        }
-        if (sort.kind === "created") {
-          const aa = a.created_at || "";
-          const bb = b.created_at || "";
-          return sort.asc ? aa.localeCompare(bb) : bb.localeCompare(aa);
-        }
-        if (sort.kind === "name") {
-          const aa = a.name || "";
-          const bb = b.name || "";
-          return sort.asc ? aa.localeCompare(bb,"ja") : bb.localeCompare(aa,"ja");
-        }
-        return 0;
-      });
-    }
-
-    function validateForInsert(name, expYMD, qty, loc) {
+    // ===== CRUD（items） =====
+    function validateForInsert(name, expYMD, qty, locId) {
       if (!name) return "商品名を入力してね";
       if (!expYMD) return "賞味期限を8桁で入力してね（例: 20270203）";
       if (!Number.isFinite(qty) || qty < 1) return "数量は1以上（登録時は0NG）";
-      if (!loc) return "保存場所を選んでね";
-      if (!LOCATIONS.includes(loc)) return "保存場所が不正です";
+      if (!locId) return "保存場所を選んでね";
+      if (!locById.has(locId)) return "保存場所が不正です（設定を確認）";
       return "";
     }
 
@@ -933,30 +956,41 @@
       const name = $("inName").value.trim();
       const expYMD = normalizeExpToYMD($("inExp").value);
       const qty = parseInt($("inQty").value, 10);
-      const loc = $("inLoc").value.trim();
+      const locId = $("inLoc").value.trim();
       const yomi = $("inYomi").value.trim();
 
-      const msg = validateForInsert(name, expYMD, qty, loc);
+      const msg = validateForInsert(name, expYMD, qty, locId);
       if (msg) return toast(msg);
 
       $("btnAdd").disabled = true;
       try {
+        let productId = null;
+        const selIdx = $("selProduct").value;
+        if (selIdx !== "") {
+          const list = getProductsForCurrentLoc();
+          const idx = parseInt(selIdx, 10);
+          if (Number.isFinite(idx) && idx >= 0 && idx < list.length) productId = list[idx].id;
+        }
+
         const { error } = await sb.from("items").insert([{
+          product_id: productId,
           name,
+          yomi: yomi ? yomi : null,
           expiration_date: expYMD,
           quantity: qty,
-          note: loc,
-          barcode: yomi ? yomi : null
+          location_id: locId
         }]);
         if (error) throw error;
 
         $("inName").value = "";
-        $("inExp").value = "";          // ★ VerN: 追加後も空欄に戻す
+        $("inExp").value = "";
         setInQty(1);
         $("inYomi").value = "";
         $("selProduct").value = "";
         closeNameSuggestions();
+
         toast("追加しました");
+        await fetchItems(false);
       } catch (e) {
         console.error(e);
         toast(`追加失敗: ${e.message || e}`);
@@ -987,6 +1021,7 @@
         if (error) throw error;
         toast("削除しました");
         closeModal();
+        await fetchItems(false);
       } catch (e) {
         console.error(e);
         toast(`削除失敗: ${e.message || e}`);
@@ -1001,6 +1036,7 @@
         if (error) throw error;
         toast("在庫0のため自動削除しました");
         closeModal();
+        await fetchItems(false);
       } catch (e) {
         console.error(e);
         toast(`自動削除失敗: ${e.message || e}`);
@@ -1012,37 +1048,21 @@
       if (next < 0) return;
       if (next === 0) return await deleteItemAuto(id);
       await updateItem(id, { quantity: next }, true);
+      await fetchItems(false);
     }
 
-    // ---- 登録フォーム数量ステッパー ----
-    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
-    function syncInQtyUI() {
-      const v = parseInt($("inQty").value, 10);
-      const qty = Number.isFinite(v) ? v : 1;
-      $("inQty").value = String(clamp(qty, 1, 9999));
-      $("inQtyDisplay").textContent = $("inQty").value;
-    }
-    function setInQty(n) {
-      $("inQty").value = String(clamp(parseInt(n,10) || 1, 1, 9999));
-      syncInQtyUI();
-    }
-    function bumpInQty(delta) {
-      const cur = parseInt($("inQty").value, 10) || 1;
-      setInQty(cur + delta);
-    }
-
-    // ---- Edit Modal ----
+    // ===== 編集モーダル =====
     function openModal(item) {
       editingId = item.id;
       $("mName").value = item.name || "";
       $("mExp").value = item.expiration_date || "";
       $("mQty").value = String(item.quantity ?? 0);
-      $("mLoc").value = (item.note || "").trim();
-      $("mYomi").value = (item.barcode || "").trim();
+      $("mLoc").value = item.location_id || "";
+      $("mYomi").value = item.yomi || "";
 
       const diff = daysDiffFromToday(item.expiration_date);
-      const loc = (item.note || "").trim() || "未設定";
-      $("mHint").textContent = `保存場所: ${loc} / 残日数: ${diff < 0 ? (Math.abs(diff) + "日 期限切れ") : (diff === 0 ? "今日まで" : ("あと" + diff + "日"))} / 数量0で自動削除`;
+      const locName = locById.get(item.location_id)?.name || "未設定";
+      $("mHint").textContent = `保存場所: ${locName} / 残日数: ${diff < 0 ? (Math.abs(diff) + "日 期限切れ") : (diff === 0 ? "今日まで" : ("あと" + diff + "日"))} / 数量0で自動削除`;
 
       $("modalBackdrop").classList.add("show");
       $("modalBackdrop").setAttribute("aria-hidden", "false");
@@ -1056,18 +1076,17 @@
       editingId = null;
     }
 
-    // ---- 在庫検索候補 ----
+    // ===== 在庫検索候補（items） =====
     function buildSuggestions(query) {
       const q = normKey(query);
       if (!q) return [];
 
-      let base = itemsCache;
-      if (activeLoc !== TAB_ALL) base = base.filter(it => ((it.note || "").trim() === activeLoc));
-
+      const base = itemsCache;
       const scored = [];
+
       for (const it of base) {
         const nk = normKey(it.name || "");
-        const yk = normKey((it.barcode || "").trim());
+        const yk = normKey(it.yomi || "");
         const nameHit = nk.startsWith(q);
         const yomiHit = yk && yk.startsWith(q);
         if (nameHit || yomiHit) {
@@ -1083,7 +1102,7 @@
       const seen = new Set();
       for (const s of scored) {
         const it = s.it;
-        const key = `${it.name}__${(it.note||"").trim()}__${it.expiration_date}`;
+        const key = `${it.name}__${it.location_id}__${it.expiration_date}`;
         if (seen.has(key)) continue;
         seen.add(key);
         out.push(s);
@@ -1107,8 +1126,7 @@
 
       for (const s of list) {
         const it = s.it;
-        const loc = (it.note || "").trim() || "未設定";
-        const yomi = (it.barcode || "").trim();
+        const locName = locById.get(it.location_id)?.name || "未設定";
         const diff = daysDiffFromToday(it.expiration_date);
 
         const btn = document.createElement("button");
@@ -1126,7 +1144,7 @@
         nm.textContent = it.name || "";
         const sub = document.createElement("div");
         sub.className = "suggestSub";
-        sub.textContent = `${loc}${yomi ? (" / よみ: " + yomi) : ""}`;
+        sub.textContent = `${locName}${it.yomi ? (" / よみ: " + it.yomi) : ""}`;
         left.appendChild(nm);
         left.appendChild(sub);
 
@@ -1143,15 +1161,18 @@
       suggestOpen = true;
     }
 
-    // ---- 商品名入力：マスター候補 ----
+    // ===== 商品名入力：マスター候補（products） =====
     function buildNameSuggestions(query) {
       const q = normKey(query);
       if (!q) return [];
+
+      const list = (activeLocId === TAB_ALL) ? products : (productsByLocId.get(activeLocId) || []);
       const out = [];
-      for (const m of productMaster) {
-        const nk = normKey(m.name || "");
-        const yk = normKey(m.yomi || "");
-        if (nk.startsWith(q) || (yk && yk.startsWith(q))) out.push(m);
+
+      for (const p of list) {
+        const nk = normKey(p.name || "");
+        const yk = normKey(p.yomi || "");
+        if (nk.startsWith(q) || (yk && yk.startsWith(q))) out.push(p);
         if (out.length >= 10) break;
       }
       return out;
@@ -1170,12 +1191,20 @@
       box.innerHTML = "";
       if (!q.trim() || list.length === 0) { closeNameSuggestions(); return; }
 
-      for (const m of list) {
+      for (const p of list) {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "suggestItem";
         btn.onclick = () => {
-          applyMasterItem(m);
+          activeLocId = p.location_id;
+          buildTabs();
+          applyTabToAddForm();
+          renderProductSelect();
+
+          $("inName").value = p.name || "";
+          $("inYomi").value = p.yomi || "";
+          $("inLoc").value = p.location_id || "";
+
           closeNameSuggestions();
           $("inExp").focus();
         };
@@ -1183,10 +1212,10 @@
         const left = document.createElement("div");
         const nm = document.createElement("div");
         nm.className = "suggestName";
-        nm.textContent = m.name || "";
+        nm.textContent = p.name || "";
         const sub = document.createElement("div");
         sub.className = "suggestSub";
-        sub.textContent = `${m.loc}${m.yomi ? (" / よみ: " + m.yomi) : ""}`;
+        sub.textContent = `${p.location_name || (locById.get(p.location_id)?.name || "")}${p.yomi ? (" / よみ: " + p.yomi) : ""}`;
         left.appendChild(nm);
         left.appendChild(sub);
 
@@ -1203,13 +1232,64 @@
       nameSuggestOpen = true;
     }
 
-    // ===== 描画のまとめ（coalescing） =====
+    // ===== Render（まとめて描画） =====
     function requestRender() {
       if (renderScheduled) return;
       renderScheduled = true;
       requestAnimationFrame(() => {
         renderScheduled = false;
         renderOptimized();
+      });
+    }
+
+    function getFilteredAndSorted() {
+      const q = normKey($("inSearch").value);
+      let list = itemsCache;
+
+      if (q) {
+        list = list.filter(it => {
+          const nk = normKey(it.name || "");
+          const yk = normKey(it.yomi || "");
+          if (q.length <= 2) return nk.startsWith(q) || (yk && yk.startsWith(q));
+          return nk.includes(q) || (yk && yk.includes(q));
+        });
+      }
+
+      const sort = $("selSort").value;
+
+      if (sort === "exp_asc") {
+        return [...list].sort((a,b) => (a.expiration_date||"").localeCompare(b.expiration_date||""));
+      }
+      if (sort === "exp_desc") {
+        return [...list].sort((a,b) => (b.expiration_date||"").localeCompare(a.expiration_date||""));
+      }
+      if (sort === "created_asc") {
+        return [...list].sort((a,b) => (a.created_at||"").localeCompare(b.created_at||""));
+      }
+      if (sort === "created_desc") {
+        return [...list].sort((a,b) => (b.created_at||"").localeCompare(a.created_at||""));
+      }
+      if (sort === "name_asc") {
+        return [...list].sort((a,b) => (a.name||"").localeCompare(b.name||"","ja"));
+      }
+      if (sort === "name_desc") {
+        return [...list].sort((a,b) => (b.name||"").localeCompare(a.name||"","ja"));
+      }
+
+      return [...list].sort((a,b) => {
+        const da = daysDiffFromToday(a.expiration_date);
+        const db = daysDiffFromToday(b.expiration_date);
+        if (da !== db) return da - db;
+
+        const la = (locById.get(a.location_id)?.sort_order ?? 0) - (locById.get(b.location_id)?.sort_order ?? 0);
+        if (la !== 0) return la;
+
+        const na = locById.get(a.location_id)?.name || "";
+        const nb = locById.get(b.location_id)?.name || "";
+        const lc = na.localeCompare(nb, "ja");
+        if (lc !== 0) return lc;
+
+        return (a.name||"").localeCompare(b.name||"","ja");
       });
     }
 
@@ -1225,7 +1305,6 @@
       $("kpiExpired").textContent = String(expired);
     }
 
-    // ===== DOM差分更新＋並び替え（要素使い回し） =====
     function buildItemElement(it) {
       const card = document.createElement("div");
       card.className = "item";
@@ -1329,7 +1408,7 @@
 
       el.querySelector(".name").textContent = it.name || "";
 
-      const loc = (it.note || "").trim() || "（未設定）";
+      const locName = locById.get(it.location_id)?.name || "（未設定）";
       const qty = Number.isFinite(it.quantity) ? it.quantity : 0;
 
       const pLoc = el.querySelector('[data-role="loc"]');
@@ -1338,7 +1417,7 @@
       const pQty = el.querySelector('[data-role="qty"]');
       const qtyBox = el.querySelector('[data-role="qtybox"]');
 
-      pLoc.textContent = `保存場所: ${loc}`;
+      pLoc.textContent = `保存場所: ${locName}`;
 
       pExp.className = "pill " + pillCls;
       pExp.textContent = `賞味期限: ${it.expiration_date}`;
@@ -1381,99 +1460,199 @@
       listEl.replaceChildren(frag);
     }
 
-    // ---- Master Modal ----
-    function openMaster() {
-      $("masterText").value = masterToText(productMaster);
-      $("masterHint").textContent = `現在 ${productMaster.length} 件`;
-      $("masterBackdrop").classList.add("show");
-      $("masterBackdrop").setAttribute("aria-hidden", "false");
+    // ===== 設定モーダル（locations/products） =====
+    function openSettings() {
+      showSettingsPanel("loc");
+      loadLocTextFromState();
+      loadProdTextFromState();
+
+      $("settingsBackdrop").classList.add("show");
+      $("settingsBackdrop").setAttribute("aria-hidden", "false");
     }
-    function closeMaster() {
-      $("masterBackdrop").classList.remove("show");
-      $("masterBackdrop").setAttribute("aria-hidden", "true");
+    function closeSettings() {
+      $("settingsBackdrop").classList.remove("show");
+      $("settingsBackdrop").setAttribute("aria-hidden", "true");
     }
 
-    // ---- Edit Modal Save/Delete ----
-    $("mSave").addEventListener("click", async () => {
-      if (!editingId) return;
-      const name = $("mName").value.trim();
-      const expYMD = normalizeExpToYMD($("mExp").value);
-      const qty = parseInt($("mQty").value, 10);
-      const loc = $("mLoc").value.trim();
-      const yomi = $("mYomi").value.trim();
+    function showSettingsPanel(which) {
+      const loc = $("panelLoc");
+      const prod = $("panelProd");
+      if (which === "loc") {
+        loc.classList.remove("hidden");
+        prod.classList.add("hidden");
+        $("segLoc").style.background = "#111";
+        $("segLoc").style.color = "#fff";
+        $("segProd").style.background = "#fff";
+        $("segProd").style.color = "#111";
+      } else {
+        prod.classList.remove("hidden");
+        loc.classList.add("hidden");
+        $("segProd").style.background = "#111";
+        $("segProd").style.color = "#fff";
+        $("segLoc").style.background = "#fff";
+        $("segLoc").style.color = "#111";
+      }
+    }
 
-      if (!name) return toast("商品名を入力してね");
-      if (!expYMD) return toast("賞味期限を8桁で入力してね（例: 20270203）");
-      if (!Number.isFinite(qty) || qty < 0) return toast("数量は0以上");
-      if (!loc || !LOCATIONS.includes(loc)) return toast("保存場所を選んでね");
+    function loadLocTextFromState() {
+      $("locText").value = (locations || []).map(l => l.name).join("\n");
+      $("locStatus").textContent = `現在 ${locations.length} 件`;
+    }
+    function loadProdTextFromState() {
+      $("prodText").value = (products || [])
+        .slice()
+        .sort((a,b) => (a.location_name||"").localeCompare(b.location_name||"","ja") || (a.name||"").localeCompare(b.name||"","ja"))
+        .map(p => `${p.name} | ${p.yomi || ""} | ${p.location_name || ""}`)
+        .join("\n");
+      $("prodStatus").textContent = `現在 ${products.length} 件`;
+    }
 
-      if (qty === 0) return await deleteItemAuto(editingId);
+    function parseLines(text) {
+      return (text || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    }
 
-      await updateItem(editingId, {
-        name,
-        expiration_date: expYMD,
-        quantity: qty,
-        note: loc,
-        barcode: yomi ? yomi : null
-      });
-      closeModal();
-    });
+    async function saveLocationsFromText() {
+      const sb = ensureSupabase(); if (!sb) return;
+      const lines = parseLines($("locText").value);
 
-    $("mDelete").addEventListener("click", async () => {
-      if (!editingId) return;
-      await deleteItemConfirm(editingId);
-    });
-
-    // ---- Events ----
-    $("btnSaveCfg").addEventListener("click", () => { saveCfgToLS(); refreshSessionUI(); });
-    $("btnLogin").addEventListener("click", login);
-    $("btnLogout").addEventListener("click", logout);
-    $("btnAdd").addEventListener("click", addItem);
-    $("btnReload").addEventListener("click", () => reloadItems(true));
-    $("selSort").addEventListener("change", () => requestRender());
-    $("selProduct").addEventListener("change", (e) => applyMasterSelection(e.target.value));
-
-    $("modalBackdrop").addEventListener("click", (e) => { if (e.target === $("modalBackdrop")) closeModal(); });
-    document.addEventListener("keydown", (e) => { if (modalOpen && e.key === "Escape") closeModal(); });
-    $("mCancel").addEventListener("click", closeModal);
-
-    $("btnMaster").addEventListener("click", openMaster);
-    $("masterBackdrop").addEventListener("click", (e) => { if (e.target === $("masterBackdrop")) closeMaster(); });
-    $("masterClose").addEventListener("click", closeMaster);
-    $("masterSave").addEventListener("click", () => {
-      const text = $("masterText").value;
-      const parsed = parseMasterText(text);
-      if (parsed.length === 0 && text.trim() !== "") {
-        $("masterHint").textContent = "保存できる行がありません（形式と保存場所を確認してね）";
-        toast("マスター保存失敗");
+      if (lines.length === 0) {
+        $("locStatus").textContent = "最低1つは保存場所を入れてね";
+        toast("保存場所が空です");
         return;
       }
-      saveMaster(parsed);
-      $("masterHint").textContent = `保存しました（${parsed.length} 件）`;
-      toast("商品マスターを保存しました");
-      closeMaster();
-    });
 
+      $("locSave").disabled = true;
+      try {
+        const desired = lines.map((name, idx) => ({ name, sort_order: idx }));
+
+        const { error: upErr } = await sb.from("locations")
+          .upsert(desired, { onConflict: "created_by,name" });
+        if (upErr) throw upErr;
+
+        await fetchLocations();
+
+        $("locStatus").textContent = `保存しました（${locations.length} 件）`;
+        toast("保存場所を保存しました");
+
+        if (activeLocId !== TAB_ALL && !locById.has(activeLocId)) activeLocId = TAB_ALL;
+        buildTabs();
+        renderLocationSelects();
+        applyTabToAddForm();
+        renderProductSelect();
+        await fetchItems(false);
+
+      } catch (e) {
+        console.error(e);
+        $("locStatus").textContent = `保存失敗: ${e.message || e}`;
+        toast("保存場所の保存失敗");
+      } finally {
+        $("locSave").disabled = false;
+      }
+    }
+
+    function parseProductText(text) {
+      const lines = parseLines(text);
+      const out = [];
+      for (const line of lines) {
+        let parts = line.split("|").map(s => s.trim());
+        if (parts.length === 1) parts = line.split(",").map(s => s.trim());
+        if (parts.length === 1) parts = line.split("\t").map(s => s.trim());
+
+        const name = (parts[0] || "").trim();
+        const yomi = (parts[1] || "").trim();
+        const locName = (parts[2] || "").trim();
+
+        if (!name || !locName) continue;
+        out.push({ name, yomi, locName });
+      }
+      return out;
+    }
+
+    async function saveProductsFromText() {
+      const sb = ensureSupabase(); if (!sb) return;
+
+      const parsed = parseProductText($("prodText").value);
+      if (parsed.length === 0 && $("prodText").value.trim() !== "") {
+        $("prodStatus").textContent = "保存できる行がありません（形式：商品名 | よみ | 保存場所名）";
+        toast("商品マスター保存失敗");
+        return;
+      }
+
+      const rows = [];
+      const bad = [];
+      for (const p of parsed) {
+        const locId = locIdByName.get(p.locName);
+        if (!locId) { bad.push(p.locName); continue; }
+        rows.push({ name: p.name, yomi: p.yomi || null, location_id: locId });
+      }
+      if (bad.length > 0) {
+        const uniq = [...new Set(bad)].slice(0, 10);
+        $("prodStatus").textContent = `保存場所名が見つかりません: ${uniq.join(" / ")}（保存場所タブで先に登録してね）`;
+        toast("保存場所名が不正");
+        return;
+      }
+
+      $("prodSave").disabled = true;
+      try {
+        const { error } = await sb.from("products")
+          .upsert(rows, { onConflict: "created_by,name,location_id" });
+        if (error) throw error;
+
+        await fetchProducts();
+        renderProductSelect();
+
+        $("prodStatus").textContent = `保存しました（${products.length} 件）`;
+        toast("商品マスターを保存しました");
+      } catch (e) {
+        console.error(e);
+        $("prodStatus").textContent = `保存失敗: ${e.message || e}`;
+        toast("商品マスター保存失敗");
+      } finally {
+        $("prodSave").disabled = false;
+      }
+    }
+
+    // ===== Init / Events =====
+    $("btnSaveCfg").addEventListener("click", () => { saveCfgToLS(); refreshSessionUI(); });
+
+    $("btnLogin").addEventListener("click", login);
     $("password").addEventListener("keydown", (e) => { if (e.key === "Enter") login(); });
+
+    $("btnLogout").addEventListener("click", logout);
+
+    $("btnSettings").addEventListener("click", openSettings);
+    $("settingsClose").addEventListener("click", closeSettings);
+    $("settingsBackdrop").addEventListener("click", (e) => { if (e.target === $("settingsBackdrop")) closeSettings(); });
+
+    $("segLoc").addEventListener("click", () => showSettingsPanel("loc"));
+    $("segProd").addEventListener("click", () => showSettingsPanel("prod"));
+
+    $("locReload").addEventListener("click", async () => {
+      try { await fetchLocations(); loadLocTextFromState(); toast("保存場所を再読込しました"); }
+      catch (e) { console.error(e); toast(`再読込失敗: ${e.message || e}`); }
+    });
+    $("locSave").addEventListener("click", saveLocationsFromText);
+
+    $("prodReload").addEventListener("click", async () => {
+      try { await fetchProducts(); loadProdTextFromState(); toast("商品マスターを再読込しました"); }
+      catch (e) { console.error(e); toast(`再読込失敗: ${e.message || e}`); }
+    });
+    $("prodSave").addEventListener("click", saveProductsFromText);
+
+    $("btnAdd").addEventListener("click", addItem);
+    $("btnReload").addEventListener("click", () => fetchItems(true));
 
     $("btnQtyUp").addEventListener("click", () => bumpInQty(+1));
     $("btnQtyDown").addEventListener("click", () => bumpInQty(-1));
 
-    // デバウンス適用
-    const debouncedStockSearch = debounce(() => {
-      renderSuggestions();
-      requestRender();
-    }, 200);
+    $("selProduct").addEventListener("change", (e) => applyProductSelection(e.target.value));
 
-    const debouncedNameSuggest = debounce(() => {
-      renderNameSuggestions();
-    }, 160);
+    const debouncedStockSearch = debounce(() => { renderSuggestions(); requestRender(); }, 200);
+    const debouncedNameSuggest = debounce(() => { renderNameSuggestions(); }, 160);
 
     $("inSearch").addEventListener("input", () => debouncedStockSearch());
     $("inSearch").addEventListener("focus", () => renderSuggestions());
-    $("inSearch").addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === "Escape") closeSuggestions();
-    });
+    $("inSearch").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === "Escape") closeSuggestions(); });
 
     $("inName").addEventListener("input", () => debouncedNameSuggest());
     $("inName").addEventListener("focus", () => renderNameSuggestions());
@@ -1492,34 +1671,69 @@
       if (nameSuggestOpen && e.target !== input2 && !box2.contains(e.target)) closeNameSuggestions();
     });
 
-    // ---- Init ----
+    $("selSort").addEventListener("change", () => requestRender());
+
+    $("modalBackdrop").addEventListener("click", (e) => { if (e.target === $("modalBackdrop")) closeModal(); });
+    document.addEventListener("keydown", (e) => { if (modalOpen && e.key === "Escape") closeModal(); });
+    $("mCancel").addEventListener("click", closeModal);
+
+    $("mSave").addEventListener("click", async () => {
+      if (!editingId) return;
+
+      const name = $("mName").value.trim();
+      const expYMD = normalizeExpToYMD($("mExp").value);
+      const qty = parseInt($("mQty").value, 10);
+      const locId = $("mLoc").value.trim();
+      const yomi = $("mYomi").value.trim();
+
+      if (!name) return toast("商品名を入力してね");
+      if (!expYMD) return toast("賞味期限を8桁で入力してね（例: 20270203）");
+      if (!Number.isFinite(qty) || qty < 0) return toast("数量は0以上");
+      if (!locId || !locById.has(locId)) return toast("保存場所を選んでね");
+
+      if (qty === 0) return await deleteItemAuto(editingId);
+
+      await updateItem(editingId, { name, yomi: yomi ? yomi : null, expiration_date: expYMD, quantity: qty, location_id: locId });
+      closeModal();
+      await fetchItems(false);
+    });
+
+    $("mDelete").addEventListener("click", async () => {
+      if (!editingId) return;
+      await deleteItemConfirm(editingId);
+    });
+
+    // 候補閉じる
     function closeSuggestions() { $("suggestBox").classList.remove("show"); suggestOpen = false; }
     function closeNameSuggestions() { $("nameSuggestBox").classList.remove("show"); nameSuggestOpen = false; }
 
-    // ★ VerN: 登録フォームの賞味期限は空欄スタート
+    // 初期値
     $("inExp").value = "";
-
     $("selSort").value = "exp_practice";
-
-    loadCfgFromLS();
-    setLibStatus();
-    loadMaster();
-    buildTabs();
-    applyTabToAddForm();
-    renderProductSelect();
-
+    syncInQtyUI();
     attachExpFormatter($("inExp"));
     attachExpFormatter($("mExp"));
 
-    syncInQtyUI();
+    // 起動
+    loadCfgFromLS();
+    setLibStatus();
 
     (async () => {
       if (($("sbUrl").value || "").trim() && ($("sbKey").value || "").trim()) ensureSupabase();
-      try { await refreshSessionUI(); }
-      catch (e) { console.error(e); toast(`初期化失敗: ${e.message || e}`); }
+
+      try {
+        await refreshSessionUI();
+      } catch (e) {
+        console.error(e);
+        toast(`初期化失敗: ${e.message || e}`);
+      }
 
       const sb = ensureSupabase();
-      if (sb) sb.auth.onAuthStateChange(async () => { await refreshSessionUI(); });
+      if (sb) {
+        sb.auth.onAuthStateChange(async () => {
+          await refreshSessionUI();
+        });
+      }
     })();
   </script>
 </body>
